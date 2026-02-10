@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import warnings
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
@@ -75,6 +76,25 @@ class TestBatTracking:
         url = mock_get.call_args[0][0]
         assert "minSwings=50" in url
 
+    @patch("savant_extras.bat_tracking.requests.get")
+    def test_pre_2024_warns(self, mock_get):
+        mock_get.return_value = _mock_response(SAMPLE_CSV)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            bat_tracking("2023-04-01", "2023-04-30")
+            assert len(w) == 1
+            assert "2024" in str(w[0].message)
+            assert "Hawk-Eye" in str(w[0].message)
+
+    @patch("savant_extras.bat_tracking.requests.get")
+    def test_2024_no_warning(self, mock_get):
+        mock_get.return_value = _mock_response(SAMPLE_CSV)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            bat_tracking("2024-04-01", "2024-04-30")
+            hawk_warnings = [x for x in w if "Hawk-Eye" in str(x.message)]
+            assert len(hawk_warnings) == 0
+
 
 class TestBatTrackingMonthly:
     @patch("savant_extras.bat_tracking.requests.get")
@@ -104,6 +124,23 @@ class TestBatTrackingMonthly:
         mock_get.return_value = _mock_response(empty_csv)
         df = bat_tracking_monthly(2024)
         assert isinstance(df, pd.DataFrame)
+
+    @patch("savant_extras.bat_tracking.requests.get")
+    def test_pre_2024_warns(self, mock_get):
+        mock_get.return_value = _mock_response(SAMPLE_CSV)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            bat_tracking_monthly(2023)
+            hawk_warnings = [x for x in w if "Hawk-Eye" in str(x.message)]
+            assert len(hawk_warnings) >= 1
+
+    @patch("savant_extras.bat_tracking.time.sleep")
+    @patch("savant_extras.bat_tracking.requests.get")
+    def test_sleep_between_requests(self, mock_get, mock_sleep):
+        mock_get.return_value = _mock_response(SAMPLE_CSV)
+        bat_tracking_monthly(2024)
+        # 7 months, sleep between each (6 sleeps)
+        assert mock_sleep.call_count == 6
 
 
 class TestBatTrackingSplits:
@@ -142,3 +179,12 @@ class TestBatTrackingSplits:
         second_url = mock_get.call_args_list[1][0][0]
         assert "dateStart=2024-07-14" in second_url
         assert "dateEnd=2024-11-01" in second_url
+
+    @patch("savant_extras.bat_tracking.requests.get")
+    def test_pre_2024_warns(self, mock_get):
+        mock_get.return_value = _mock_response(SAMPLE_CSV)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            bat_tracking_splits(2023)
+            hawk_warnings = [x for x in w if "Hawk-Eye" in str(x.message)]
+            assert len(hawk_warnings) >= 1

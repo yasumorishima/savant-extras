@@ -9,9 +9,13 @@ savant-extras supports arbitrary date ranges for custom splits.
 from __future__ import annotations
 
 import io
+import time
+import warnings
 
 import pandas as pd
 import requests
+
+_HAWK_EYE_START_YEAR = 2024
 
 
 _BASE_URL = (
@@ -87,15 +91,23 @@ def bat_tracking(
             f"player_type must be 'batter' or 'pitcher', got {player_type!r}"
         )
 
-    season_start = start_date[:4]
-    season_end = end_date[:4]
+    season_start = int(start_date[:4])
+    season_end = int(end_date[:4])
+
+    if season_start < _HAWK_EYE_START_YEAR:
+        warnings.warn(
+            f"Bat tracking data is only available from {_HAWK_EYE_START_YEAR} onward "
+            f"(Hawk-Eye). Year {season_start} will likely return empty data.",
+            UserWarning,
+            stacklevel=2,
+        )
 
     url = _BASE_URL.format(
         start_date=start_date,
         end_date=end_date,
         min_swings=min_swings,
-        season_start=season_start,
-        season_end=season_end,
+        season_start=str(season_start),
+        season_end=str(season_end),
         player_type=player_type,
     )
 
@@ -144,7 +156,9 @@ def bat_tracking_monthly(
     season_months = range(4, 11)
     frames = []
 
-    for month in season_months:
+    for i, month in enumerate(season_months):
+        if i > 0:
+            time.sleep(1)
         last_day = calendar.monthrange(year, month)[1]
         start = f"{year}-{month:02d}-01"
         end = f"{year}-{month:02d}-{last_day:02d}"
