@@ -114,7 +114,11 @@ def bat_tracking(
     response = requests.get(url, timeout=30)
     response.raise_for_status()
 
-    df = pd.read_csv(io.StringIO(response.content.decode("utf-8")))
+    text = response.content.decode("utf-8")
+    if not text.strip() or text.strip().startswith("<!"):
+        return pd.DataFrame()
+
+    df = pd.read_csv(io.StringIO(text))
     return df
 
 
@@ -210,6 +214,7 @@ def bat_tracking_splits(
         player_type=player_type,
         min_swings=min_swings,
     )
+    time.sleep(1)
     second_half = bat_tracking(
         f"{year}-07-14",
         f"{year}-11-01",

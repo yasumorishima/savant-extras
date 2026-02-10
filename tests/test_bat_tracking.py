@@ -87,6 +87,20 @@ class TestBatTracking:
             assert "Hawk-Eye" in str(w[0].message)
 
     @patch("savant_extras.bat_tracking.requests.get")
+    def test_html_response_returns_empty(self, mock_get):
+        mock_get.return_value = _mock_response("<!DOCTYPE html><html></html>")
+        df = bat_tracking("2024-04-01", "2024-04-30")
+        assert isinstance(df, pd.DataFrame)
+        assert df.empty
+
+    @patch("savant_extras.bat_tracking.requests.get")
+    def test_empty_response_returns_empty(self, mock_get):
+        mock_get.return_value = _mock_response("")
+        df = bat_tracking("2024-04-01", "2024-04-30")
+        assert isinstance(df, pd.DataFrame)
+        assert df.empty
+
+    @patch("savant_extras.bat_tracking.requests.get")
     def test_2024_no_warning(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         with warnings.catch_warnings(record=True) as w:
