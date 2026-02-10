@@ -1,0 +1,38 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "savant-extras"
+version = "0.1.0"
+description = "Baseball Savant leaderboard data with date range support — complements pybaseball"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.9"
+authors = [
+  { name = "yasumorishima" },
+]
+keywords = ["baseball", "mlb", "statcast", "baseball-savant", "bat-tracking", "pybaseball"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+  "Topic :: Scientific/Engineering :: Information Analysis",
+]
+dependencies = [
+  "pandas>=1.3",
+  "requests>=2.27",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=7",
+  "pytest-cov",
+]
+
+[project.urls]
+Homepage = "https://github.com/yasumorishima/savant-extras"
+Repository = "https://github.com/yasumorishima/savant-extras"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
