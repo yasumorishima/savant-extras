@@ -7,7 +7,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import numpy as np
-import japanize_matplotlib  # noqa: F401  — enables Japanese fonts in matplotlib
+import matplotlib_fontja  # noqa: F401  — enables Japanese fonts in matplotlib (Python 3.12+ compatible)
 from pybaseball import batting_stats, pitching_stats
 
 from savant_extras import bat_tracking, bat_tracking_monthly, bat_tracking_splits
