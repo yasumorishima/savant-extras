@@ -572,32 +572,6 @@ button[data-testid="stElementToolbarButton"] {
 </style>
 """, unsafe_allow_html=True)
 
-# ── Mobile CSS (always injected) ──────────────────────────────────────────────
-st.markdown("""
-<style>
-@media (max-width: 640px) {
-    /* Stack columns vertically on mobile */
-    [data-testid="stHorizontalBlock"] {
-        flex-wrap: wrap !important;
-    }
-    [data-testid="column"] {
-        width: 100% !important;
-        flex: 1 1 100% !important;
-        min-width: 100% !important;
-    }
-    /* Prevent horizontal overflow on tables/figures */
-    [data-testid="stDataFrame"], iframe {
-        max-width: 100% !important;
-        overflow-x: auto !important;
-    }
-    /* Larger tap targets for buttons */
-    .stButton button {
-        min-height: 44px !important;
-    }
-}
-</style>
-""", unsafe_allow_html=True)
-
 
 # ── Load data ────────────────────────────────────────────────────────────────
 if load_btn:
@@ -663,7 +637,7 @@ if df is not None:
 # ── Welcome cards (shown only before data is loaded) ─────────────────────────
 def _welcome_card(col, title_key: str, desc_key: str, color: str = "#1f4e79") -> None:
     col.markdown(
-        f"""<div style="border:1px solid {color}; border-radius:10px; padding:14px 16px; min-height:90px; height:auto;">
+        f"""<div style="border:1px solid {color}; border-radius:10px; padding:14px 16px; height:90px;">
   <p style="font-size:1.05rem; font-weight:700; margin:0 0 4px 0;">{t[title_key]}</p>
   <p style="font-size:0.85rem; margin:0; opacity:0.8;">{t[desc_key]}</p>
 </div>""",
@@ -754,7 +728,7 @@ with tab1:
             p_pad = (p_vals.max() - p_vals.min()) * 0.15 + 0.1
             ax.set_xlim(left=p_vals.min() - p_pad * 0.3, right=p_vals.max() + p_pad)
             fig.tight_layout()
-            st.pyplot(fig, use_container_width=True)
+            st.pyplot(fig)
             plt.close(fig)
             st.caption(t["color_pitcher_lower"] if lib else t["color_pitcher_higher"])
 
@@ -805,7 +779,7 @@ with tab1:
         pad = (vals.max() - vals.min()) * 0.15 + 0.5
         ax.set_xlim(left=vals.min() - pad * 0.3, right=vals.max() + pad)
         fig.tight_layout()
-        st.pyplot(fig, use_container_width=True)
+        st.pyplot(fig)
         plt.close(fig)
         st.caption(t["color_vs_avg"])
         if metric == "ideal_attack_angle_rate":
@@ -872,7 +846,7 @@ with tab2:
                 ax.set_yticklabels([])
                 ax.set_title(t["radar_title_pitcher"], fontsize=12, fontweight="bold", pad=20)
                 ax.legend(loc="upper right", bbox_to_anchor=(1.35, 1.15), fontsize=9)
-                st.pyplot(fig, use_container_width=True)
+                st.pyplot(fig)
                 plt.close(fig)
                 st.caption(t["pitcher_compare_note"])
 
@@ -897,7 +871,7 @@ with tab2:
                                      top=max(valid2) + v_pad2)
                 fig2.suptitle(f"Metric Comparison  ({t['bar_subtitle']})", fontsize=11)
                 fig2.tight_layout()
-                st.pyplot(fig2, use_container_width=True)
+                st.pyplot(fig2)
                 plt.close(fig2)
                 st.caption(t["cap_bar_note"])
 
@@ -944,7 +918,7 @@ with tab2:
             ax.set_yticklabels([])
             ax.set_title(t["radar_title"], fontsize=12, fontweight="bold", pad=20)
             ax.legend(loc="upper right", bbox_to_anchor=(1.35, 1.15), fontsize=9)
-            st.pyplot(fig, use_container_width=True)
+            st.pyplot(fig)
             plt.close(fig)
             st.caption(t["cap_radar_note"])
 
@@ -969,7 +943,7 @@ with tab2:
                                  top=max(valid_vals) + v_pad)
             fig2.suptitle(f"Metric Comparison  ({t['bar_subtitle']})", fontsize=11)
             fig2.tight_layout()
-            st.pyplot(fig2, use_container_width=True)
+            st.pyplot(fig2)
             plt.close(fig2)
             st.caption(t["cap_bar_note"])
 
@@ -1089,7 +1063,7 @@ with tab3:
             ax2.set_ylabel(t["graph_pitching_score"])
             ax2.set_title(t["graph_batting_vs_pitching"], fontsize=12, fontweight="bold")
             fig2.tight_layout()
-            st.pyplot(fig2, use_container_width=True)
+            st.pyplot(fig2)
             plt.close(fig2)
             st.caption(t["cap_wbc_scatter"])
 
@@ -1135,7 +1109,7 @@ with tab3:
                 ax_rb.set_title(t["radar_bat_title"], fontsize=12, fontweight="bold", pad=20)
                 ax_rb.legend(loc="upper right", bbox_to_anchor=(1.45, 1.15), fontsize=8)
                 fig_rb.tight_layout()
-                rc1.pyplot(fig_rb, use_container_width=True)
+                rc1.pyplot(fig_rb)
                 plt.close(fig_rb)
 
             # Pitching radar
@@ -1166,7 +1140,7 @@ with tab3:
                     ax_rp.set_title(t["radar_pit_title"], fontsize=12, fontweight="bold", pad=20)
                     ax_rp.legend(loc="upper right", bbox_to_anchor=(1.45, 1.15), fontsize=8)
                     fig_rp.tight_layout()
-                    rc2.pyplot(fig_rp, use_container_width=True)
+                    rc2.pyplot(fig_rp)
                     plt.close(fig_rp)
 
         with st.expander(t["bat_table"]):
@@ -1333,7 +1307,7 @@ with tab4:
                 fig.suptitle(t["graph_lineup_title"].format(team=sel_team), fontsize=12,
                              fontweight="bold")
                 fig.tight_layout()
-                st.pyplot(fig, use_container_width=True)
+                st.pyplot(fig)
                 plt.close(fig)
                 st.caption(t["color_vs_lineup"])
 
@@ -1403,7 +1377,7 @@ with tab4:
             pad = (vals.max() - vals.min()) * 0.15 + 0.5
             ax.set_xlim(left=vals.min() - pad * 0.3, right=vals.max() + pad)
             fig.tight_layout()
-            st.pyplot(fig, use_container_width=True)
+            st.pyplot(fig)
             plt.close(fig)
             st.caption(t["color_vs_avg"])
 
@@ -1419,7 +1393,7 @@ with tab4:
             ax2.set_title(t["graph_all_teams_strength"].format(year=year),
                           fontsize=13, fontweight="bold")
             fig2.tight_layout()
-            st.pyplot(fig2, use_container_width=True)
+            st.pyplot(fig2)
             plt.close(fig2)
             st.caption(t["color_top5"] + "  ·  " + t["cap_composite"])
 
@@ -1436,7 +1410,7 @@ with tab4:
                 ax3.set_title(t["graph_team_overall"].format(year=year), fontsize=13, fontweight="bold")
                 ax3.grid(axis="x", alpha=0.3)
                 fig3.tight_layout()
-                st.pyplot(fig3, use_container_width=True)
+                st.pyplot(fig3)
                 plt.close(fig3)
                 st.caption(t["color_top5"] + "  ·  " + t["cap_wbc_overall"])
 
@@ -1453,7 +1427,7 @@ with tab4:
                 ax4.set_ylabel(t["graph_pitching_score"])
                 ax4.set_title(t["graph_team_bp_scatter"], fontsize=12, fontweight="bold")
                 fig4.tight_layout()
-                st.pyplot(fig4, use_container_width=True)
+                st.pyplot(fig4)
                 plt.close(fig4)
                 st.caption(t["cap_wbc_scatter"])
 
@@ -1504,7 +1478,7 @@ with tab4:
                 ax_tr.set_title(t["radar_bat_title"], fontsize=12, fontweight="bold", pad=20)
                 ax_tr.legend(loc="upper right", bbox_to_anchor=(1.5, 1.15), fontsize=7)
                 fig_tr.tight_layout()
-                tr1.pyplot(fig_tr, use_container_width=True)
+                tr1.pyplot(fig_tr)
                 plt.close(fig_tr)
 
                 # Pitching radar
@@ -1537,7 +1511,7 @@ with tab4:
                         ax_tp.set_title(t["radar_pit_title"], fontsize=12, fontweight="bold", pad=20)
                         ax_tp.legend(loc="upper right", bbox_to_anchor=(1.5, 1.15), fontsize=7)
                         fig_tp.tight_layout()
-                        tr2.pyplot(fig_tp, use_container_width=True)
+                        tr2.pyplot(fig_tp)
                     plt.close(fig_tp)
 
             # Batting details table
@@ -1625,5 +1599,5 @@ with tab5:
             ax.legend(fontsize=9)
             ax.grid(axis="y", alpha=0.3)
             fig.tight_layout()
-            st.pyplot(fig, use_container_width=True)
+            st.pyplot(fig)
             plt.close(fig)
