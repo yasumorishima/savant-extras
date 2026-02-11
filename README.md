@@ -6,6 +6,10 @@
 
 Bat tracking data (Hawk-Eye) is available from the **2024 season onward**.
 
+## Demo App
+
+**[MLB Bat Tracking Dashboard](https://yasumorishima-mlb-bat-tracking.streamlit.app/)** — A Streamlit app built with savant-extras. Leaderboard, Player Comparison, WBC Country Strength, Team Lineup Builder, and Monthly Trend tabs. English/Japanese bilingual.
+
 ## Installation
 
 ```bash
