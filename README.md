@@ -1,10 +1,14 @@
 # savant-extras
 
-**Baseball Savant leaderboard data with date range support.**
+**Baseball Savant leaderboard data — complements pybaseball.**
 
-[pybaseball](https://github.com/jldbc/pybaseball) is great for season-level data, but all its leaderboard functions are limited to full seasons. `savant-extras` fills that gap by supporting **arbitrary date ranges** — enabling monthly splits, first/second half comparisons, pre/post trade analysis, and more.
+[pybaseball](https://github.com/jldbc/pybaseball) is great for season-level data, but many Baseball Savant leaderboards are missing or limited to full seasons. `savant-extras` fills that gap with **pitch tempo**, **arm strength**, and **bat tracking with arbitrary date ranges**.
 
-Bat tracking data (Hawk-Eye) is available from the **2024 season onward**.
+| Leaderboard | Data available | pybaseball | savant-extras |
+|---|---|---|---|
+| Bat tracking (date range) | 2024+ | Full season only | Custom date ranges |
+| Pitch tempo | 2010+ | Not supported | ✅ |
+| Arm strength | 2020+ | Not supported | ✅ |
 
 ## Demo App
 
@@ -19,27 +23,23 @@ pip install savant-extras
 ## Quick Start
 
 ```python
-from savant_extras import bat_tracking, bat_tracking_monthly, bat_tracking_splits
+from savant_extras import bat_tracking, pitch_tempo, arm_strength
 
-# April 2024 — batter bat tracking
+# April 2024 batter bat tracking
 df = bat_tracking("2024-04-01", "2024-04-30")
 
-# Pitcher perspective
-df = bat_tracking("2024-04-01", "2024-06-30", player_type="pitcher")
+# 2024 pitcher pitch tempo
+df = pitch_tempo(2024)
 
-# Full season broken down by month
-df = bat_tracking_monthly(2024)
-print(df.groupby("month")["avg_bat_speed"].mean())
-
-# First half vs second half
-splits = bat_tracking_splits(2024)
-first  = splits["first_half"]
-second = splits["second_half"]
+# 2024 outfielder arm strength
+df = arm_strength(2024, position="Outfielder")
 ```
 
 ## Functions
 
-### `bat_tracking(start_date, end_date, player_type="batter", min_swings="q")`
+### Bat Tracking
+
+#### `bat_tracking(start_date, end_date, player_type="batter", min_swings="q")`
 
 Retrieve bat tracking leaderboard for any date range.
 
@@ -52,31 +52,80 @@ Retrieve bat tracking leaderboard for any date range.
 
 **Returns**: `pd.DataFrame` with columns including `avg_bat_speed`, `swing_tilt`, `attack_angle`, etc.
 
+#### `bat_tracking_monthly(year, player_type="batter", min_swings=1)`
+
+Retrieve bat tracking for each month of a season (April–October). Adds a `month` column.
+
+#### `bat_tracking_splits(year, player_type="batter", min_swings="q")`
+
+Retrieve first-half / second-half splits. Returns `{"first_half": DataFrame, "second_half": DataFrame}`.
+
 ---
 
-### `bat_tracking_monthly(year, player_type="batter", min_swings=1)`
+### Pitch Tempo
 
-Retrieve bat tracking for each month of a season (April–October).
-Adds a `month` column to the returned DataFrame.
+#### `pitch_tempo(year, player_type="pitcher", min_pitches="q", game_type="Regular")`
 
----
+Retrieve pitch tempo leaderboard for a season. Data available from **2010** onward.
 
-### `bat_tracking_splits(year, player_type="batter", min_swings="q")`
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `year` | int | — | Season year |
+| `player_type` | str | `"pitcher"` | `"pitcher"` or `"batter"` |
+| `min_pitches` | int or str | `"q"` | Minimum pitches (`"q"` = qualified) |
+| `game_type` | str | `"Regular"` | Game type filter |
 
-Retrieve first-half / second-half splits. Returns a dict:
+**Returns**: `pd.DataFrame` with columns including `median_seconds_empty`, `freq_hot`, `freq_warm`, `freq_cold`, etc.
+
 ```python
-{"first_half": pd.DataFrame, "second_half": pd.DataFrame}
+from savant_extras import pitch_tempo, pitch_tempo_range
+
+# 2024 pitcher tempo
+df = pitch_tempo(2024)
+
+# Batter perspective
+df = pitch_tempo(2024, player_type="batter")
+
+# Compare pre/post pitch clock (2022 vs 2023)
+df = pitch_tempo_range(2022, 2023)
 ```
 
-## Why savant-extras?
+#### `pitch_tempo_range(start_year, end_year, player_type="pitcher", min_pitches="q", game_type="Regular")`
 
-| | pybaseball | savant-extras |
-|---|---|---|
-| Full season data | ✅ | ✅ |
-| Monthly splits | ❌ | ✅ |
-| First/second half | ❌ | ✅ |
-| Custom date range | ❌ | ✅ |
-| Pre/post trade splits | ❌ | ✅ |
+Retrieve pitch tempo for multiple seasons. Adds a `year` column.
+
+---
+
+### Arm Strength
+
+#### `arm_strength(year, position="", min_throws=100)`
+
+Retrieve arm strength leaderboard for a season. Data available from **2020** onward.
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `year` | int | — | Season year |
+| `position` | str | `""` | Position filter (`""`, `"RF"`, `"SS"`, `"Outfielder"`, etc.) |
+| `min_throws` | int | `100` | Minimum throws |
+
+**Returns**: `pd.DataFrame` with columns including `max_arm_strength`, `arm_overall`, `total_throws`, etc.
+
+```python
+from savant_extras import arm_strength, arm_strength_range
+
+# 2024 all positions
+df = arm_strength(2024)
+
+# Right fielders only, lower threshold
+df = arm_strength(2024, position="RF", min_throws=50)
+
+# Multi-year comparison
+df = arm_strength_range(2020, 2024)
+```
+
+#### `arm_strength_range(start_year, end_year, position="", min_throws=100)`
+
+Retrieve arm strength for multiple seasons. Adds a `year` column.
 
 ## License
 
