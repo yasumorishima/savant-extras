@@ -127,6 +127,10 @@ df = arm_strength_range(2020, 2024)
 | Basestealing run value | Not supported | ✅ |
 | Timer infractions | Not supported | ✅ |
 
+## Known Issues
+
+- **`swing_take()`**: Baseball Savant's CSV endpoint for the Swing & Take leaderboard currently returns header-only data (no rows) for all years. The function is included and will work when the upstream API is restored, but currently returns an empty DataFrame.
+
 ## License
 
 MIT
