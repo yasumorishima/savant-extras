@@ -2,17 +2,7 @@
 
 **Baseball Savant leaderboard data — complements pybaseball.**
 
-[pybaseball](https://github.com/jldbc/pybaseball) is great for season-level data, but many Baseball Savant leaderboards are missing or limited to full seasons. `savant-extras` fills that gap with **pitch tempo**, **arm strength**, and **bat tracking with arbitrary date ranges**.
-
-| Leaderboard | Data available | pybaseball | savant-extras |
-|---|---|---|---|
-| Bat tracking (date range) | 2024+ | Full season only | Custom date ranges |
-| Pitch tempo | 2010+ | Not supported | ✅ |
-| Arm strength | 2020+ | Not supported | ✅ |
-
-## Demo App
-
-**[MLB Bat Tracking Dashboard](https://yasumorishima-mlb-bat-tracking.streamlit.app/)** — A Streamlit app built with savant-extras. Source code: [mlb-bat-tracking-dashboard](https://github.com/yasumorishima/mlb-bat-tracking-dashboard)
+[pybaseball](https://github.com/jldbc/pybaseball) is great but many Baseball Savant leaderboards are missing or limited. `savant-extras` fills that gap with **15+ leaderboards** covering batting, pitching, catching, baserunning, and fielding — all as simple one-line function calls returning DataFrames.
 
 ## Installation
 
@@ -23,109 +13,119 @@ pip install savant-extras
 ## Quick Start
 
 ```python
-from savant_extras import bat_tracking, pitch_tempo, arm_strength
+from savant_extras import (
+    bat_tracking, pitch_tempo, arm_strength,
+    pitch_movement, swing_take, catcher_throwing,
+)
 
-# April 2024 batter bat tracking
+# Bat tracking with custom date range (2024+)
 df = bat_tracking("2024-04-01", "2024-04-30")
 
-# 2024 pitcher pitch tempo
+# Pitcher pitch tempo
 df = pitch_tempo(2024)
 
-# 2024 outfielder arm strength
+# Outfielder arm strength
 df = arm_strength(2024, position="Outfielder")
+
+# Slider movement
+df = pitch_movement(2024, pitch_type="SL")
+
+# Batter plate discipline
+df = swing_take(2024)
+
+# Catcher pop time & CS rate
+df = catcher_throwing(2024)
 ```
 
-## Functions
+## All Functions
 
-### Bat Tracking
+Every leaderboard function returns a `pd.DataFrame`. Most have a `_range()` variant for multi-season queries (adds a `year` column).
 
-#### `bat_tracking(start_date, end_date, player_type="batter", min_swings="q")`
+### Batting
 
-Retrieve bat tracking leaderboard for any date range.
+| Function | Data from | Description |
+|---|---|---|
+| `bat_tracking(start_date, end_date)` | 2024+ | Bat speed, attack angle, swing tilt (custom date range) |
+| `bat_tracking_monthly(year)` | 2024+ | Monthly bat tracking (Apr–Oct) |
+| `bat_tracking_splits(year)` | 2024+ | First-half / second-half splits |
+| `batted_ball(year)` | — | GB/FB/LD rates, pull/oppo splits |
+| `home_runs(year)` | — | HR distance, exit velocity, xHR, no-doubters |
+| `swing_take(year)` | — | Run values by zone (heart/shadow/chase/waste) |
+| `year_to_year(year)` | — | xwOBA changes across seasons |
 
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `start_date` | str | — | Start date `YYYY-MM-DD` |
-| `end_date` | str | — | End date `YYYY-MM-DD` |
-| `player_type` | str | `"batter"` | `"batter"` or `"pitcher"` |
-| `min_swings` | int or str | `"q"` | Minimum competitive swings (`"q"` = qualified) |
+### Pitching
 
-**Returns**: `pd.DataFrame` with columns including `avg_bat_speed`, `swing_tilt`, `attack_angle`, etc.
+| Function | Data from | Description |
+|---|---|---|
+| `pitch_tempo(year)` | 2010+ | Pace metrics (median seconds, hot/warm/cold) |
+| `pitch_movement(year)` | — | Horizontal/vertical break by pitch type |
+| `pitcher_arm_angle(year)` | — | Release point angles and positions |
+| `running_game(year)` | — | Pitcher running game (pickoffs, CS above avg) |
+| `timer_infractions(year)` | 2023+ | Pitch clock violations |
 
-#### `bat_tracking_monthly(year, player_type="batter", min_swings=1)`
+### Catching
 
-Retrieve bat tracking for each month of a season (April–October). Adds a `month` column.
+| Function | Data from | Description |
+|---|---|---|
+| `catcher_blocking(year)` | — | Blocks above average, PB/WP prevention |
+| `catcher_throwing(year)` | — | Pop time, exchange time, CS rate, arm strength |
+| `catcher_stance(year)` | — | One-knee vs traditional: framing, blocking, throwing |
 
-#### `bat_tracking_splits(year, player_type="batter", min_swings="q")`
+### Baserunning & Fielding
 
-Retrieve first-half / second-half splits. Returns `{"first_half": DataFrame, "second_half": DataFrame}`.
+| Function | Data from | Description |
+|---|---|---|
+| `arm_strength(year)` | 2020+ | Fielder throw speed by position |
+| `baserunning(year)` | — | Total baserunning run value (XB + SB) |
+| `basestealing(year)` | — | Stolen base run value, lead distances |
 
----
+### Common Parameters
 
-### Pitch Tempo
+| Parameter | Type | Description |
+|---|---|---|
+| `player_type` | str | `"batter"` or `"pitcher"` (where applicable) |
+| `min_*` | int or str | Minimum threshold; `"q"` = qualified |
+| `position` | str | Position filter (arm_strength): `""`, `"RF"`, `"SS"`, etc. |
+| `pitch_type` | str | Pitch type filter (pitch_movement): `"FF"`, `"SL"`, etc. |
 
-#### `pitch_tempo(year, player_type="pitcher", min_pitches="q", game_type="Regular")`
+### Multi-Season Queries
 
-Retrieve pitch tempo leaderboard for a season. Data available from **2010** onward.
-
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `year` | int | — | Season year |
-| `player_type` | str | `"pitcher"` | `"pitcher"` or `"batter"` |
-| `min_pitches` | int or str | `"q"` | Minimum pitches (`"q"` = qualified) |
-| `game_type` | str | `"Regular"` | Game type filter |
-
-**Returns**: `pd.DataFrame` with columns including `median_seconds_empty`, `freq_hot`, `freq_warm`, `freq_cold`, etc.
-
-```python
-from savant_extras import pitch_tempo, pitch_tempo_range
-
-# 2024 pitcher tempo
-df = pitch_tempo(2024)
-
-# Batter perspective
-df = pitch_tempo(2024, player_type="batter")
-
-# Compare pre/post pitch clock (2022 vs 2023)
-df = pitch_tempo_range(2022, 2023)
-```
-
-#### `pitch_tempo_range(start_year, end_year, player_type="pitcher", min_pitches="q", game_type="Regular")`
-
-Retrieve pitch tempo for multiple seasons. Adds a `year` column.
-
----
-
-### Arm Strength
-
-#### `arm_strength(year, position="", min_throws=100)`
-
-Retrieve arm strength leaderboard for a season. Data available from **2020** onward.
-
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `year` | int | — | Season year |
-| `position` | str | `""` | Position filter (`""`, `"RF"`, `"SS"`, `"Outfielder"`, etc.) |
-| `min_throws` | int | `100` | Minimum throws |
-
-**Returns**: `pd.DataFrame` with columns including `max_arm_strength`, `arm_overall`, `total_throws`, etc.
+Most functions have a `_range(start_year, end_year)` variant:
 
 ```python
-from savant_extras import arm_strength, arm_strength_range
+from savant_extras import pitch_tempo_range, arm_strength_range
 
-# 2024 all positions
-df = arm_strength(2024)
+# Compare pitch tempo pre/post pitch clock
+df = pitch_tempo_range(2022, 2024)
 
-# Right fielders only, lower threshold
-df = arm_strength(2024, position="RF", min_throws=50)
-
-# Multi-year comparison
+# 5 years of arm strength
 df = arm_strength_range(2020, 2024)
 ```
 
-#### `arm_strength_range(start_year, end_year, position="", min_throws=100)`
+## Demo App
 
-Retrieve arm strength for multiple seasons. Adds a `year` column.
+**[MLB Bat Tracking Dashboard](https://yasumorishima-mlb-bat-tracking.streamlit.app/)** — built with savant-extras ([source](https://github.com/yasumorishima/mlb-bat-tracking-dashboard))
+
+## Why savant-extras?
+
+| Leaderboard | pybaseball | savant-extras |
+|---|---|---|
+| Bat tracking (date range) | Full season only | Custom date ranges |
+| Pitch tempo | Not supported | ✅ |
+| Arm strength | Not supported | ✅ |
+| Batted ball profile | Not supported | ✅ |
+| Home runs | Not supported | ✅ |
+| Pitch movement | Not supported | ✅ |
+| Swing & take | Not supported | ✅ |
+| Year-to-year changes | Not supported | ✅ |
+| Pitcher arm angle | Not supported | ✅ |
+| Running game (pitcher) | Not supported | ✅ |
+| Catcher blocking | Not supported | ✅ |
+| Catcher throwing | Not supported | ✅ |
+| Catcher stance | Not supported | ✅ |
+| Baserunning run value | Not supported | ✅ |
+| Basestealing run value | Not supported | ✅ |
+| Timer infractions | Not supported | ✅ |
 
 ## License
 
