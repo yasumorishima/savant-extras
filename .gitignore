@@ -6,3 +6,9 @@ build/
 .pytest_cache/
 .coverage
 *.egg
+
+# Session/dev notes
+NEXT_SESSION.md
+STREAMLIT_DEV_NOTE.md
+*_SESSION_NOTE.md
+*_DEV_NOTE.md
