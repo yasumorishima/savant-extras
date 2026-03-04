@@ -22,6 +22,7 @@ Available leaderboards
 - **Baserunning run value**: total baserunning value.
 - **Basestealing run value**: stolen base run value.
 - **Timer infractions** (2023+): pitch clock violations.
+- **Park factors** (2015+): FanGraphs per-season ballpark run factors for all 30 MLB teams.
 
 Basic usage
 -----------
@@ -50,6 +51,7 @@ from savant_extras.pitcher_arm_angle import pitcher_arm_angle, pitcher_arm_angle
 from savant_extras.running_game import running_game, running_game_range
 from savant_extras.swing_take import swing_take, swing_take_range
 from savant_extras.timer_infractions import timer_infractions, timer_infractions_range
+from savant_extras.park_factors import park_factors, park_factors_range
 from savant_extras.year_to_year import year_to_year
 
 __all__ = [
@@ -84,7 +86,9 @@ __all__ = [
     "swing_take_range",
     "timer_infractions",
     "timer_infractions_range",
+    "park_factors",
+    "park_factors_range",
     "year_to_year",
 ]
 
-__version__ = "0.3.1"
+__version__ = "0.3.2"
