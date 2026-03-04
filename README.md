@@ -2,7 +2,7 @@
 
 **Baseball Savant leaderboard data — complements pybaseball.**
 
-[pybaseball](https://github.com/jldbc/pybaseball) is great but many Baseball Savant leaderboards are missing or limited. `savant-extras` fills that gap with **15+ leaderboards** covering batting, pitching, catching, baserunning, and fielding — all as simple one-line function calls returning DataFrames.
+[pybaseball](https://github.com/jldbc/pybaseball) is great but many Baseball Savant leaderboards are missing or limited. `savant-extras` fills that gap with **16+ leaderboards** covering batting, pitching, catching, baserunning, and fielding — all as simple one-line function calls returning DataFrames.
 
 ## Installation
 
@@ -79,6 +79,30 @@ Every leaderboard function returns a `pd.DataFrame`. Most have a `_range()` vari
 | `baserunning(year)` | — | Total baserunning run value (XB + SB) |
 | `basestealing(year)` | — | Stolen base run value, lead distances |
 
+### Park Factors
+
+| Function | Data from | Description |
+|---|---|---|
+| `park_factors(season)` | 2015+ | Per-season ballpark run factors for all 30 MLB teams (FanGraphs) |
+| `park_factors_range(start, end)` | 2015+ | Multi-season park factors concatenated |
+
+Columns returned: `season`, `team`, `pf_5yr`, `pf_3yr`, `pf_1yr`, `pf_hr`, `pf_1b`, `pf_2b`, `pf_3b`, `pf_so`, `pf_bb`, `pf_fip`.
+All factors: 100 = neutral, >100 = hitter-friendly, <100 = pitcher-friendly.
+
+```python
+from savant_extras import park_factors, park_factors_range
+
+# Single season
+df = park_factors(2024)
+print(df[df["team"] == "COL"][["team", "pf_5yr", "pf_hr"]])
+#    team  pf_5yr  pf_hr
+# 5   COL     116    131
+
+# Multi-season (e.g. for model training)
+df = park_factors_range(2020, 2025)
+print(df.shape)  # 6 seasons × 30 teams = 180
+```
+
 ### Common Parameters
 
 | Parameter | Type | Description |
@@ -126,6 +150,7 @@ df = arm_strength_range(2020, 2024)
 | Baserunning run value | Not supported | ✅ |
 | Basestealing run value | Not supported | ✅ |
 | Timer infractions | Not supported | ✅ |
+| Park factors (FanGraphs) | Not supported | ✅ |
 
 ## Known Issues
 
