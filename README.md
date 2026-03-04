@@ -84,7 +84,7 @@ Every leaderboard function returns a `pd.DataFrame`. Most have a `_range()` vari
 | Parameter | Type | Description |
 |---|---|---|
 | `player_type` | str | `"batter"` or `"pitcher"` (where applicable) |
-| `min_*` | int or str | Minimum threshold; `"q"` = qualified |
+| `min_*` | int or str | 最低出場基準。数値指定（例: `min_pa=100`）または `"q"`（MLB規定打席/投球回数を自動適用）|
 | `position` | str | Position filter (arm_strength): `""`, `"RF"`, `"SS"`, etc. |
 | `pitch_type` | str | Pitch type filter (pitch_movement): `"FF"`, `"SL"`, etc. |
 
@@ -129,7 +129,7 @@ df = arm_strength_range(2020, 2024)
 
 ## Known Issues
 
-- **`swing_take()`**: Baseball Savant's CSV endpoint for the Swing & Take leaderboard currently returns header-only data (no rows) for all years. The function is included and will work when the upstream API is restored, but currently returns an empty DataFrame.
+- **`swing_take()`**: Baseball Savant の Swing & Take リーダーボードの CSV エンドポイントに障害中（ヘッダーのみ、データ行なし）。現在は空の DataFrame が返ります。上流 API が復旧次第、コード変更なしで動作します。代替として `batted_ball()` や `year_to_year()` を使用してください。
 
 ## License
 
