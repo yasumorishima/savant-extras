@@ -111,7 +111,7 @@ print(df.shape)  # 6 seasons × 30 teams = 180
 | Parameter | Type | Description |
 |---|---|---|
 | `player_type` | str | `"batter"` or `"pitcher"` (where applicable) |
-| `min_*` | int or str | 最低出場基準。数値指定（例: `min_pa=100`）または `"q"`（MLB規定打席/投球回数を自動適用）|
+| `min_*` | int or str | Minimum qualifier. Pass an int (e.g. `min_pa=100`) or `"q"` to apply the MLB standard qualifier automatically. |
 | `position` | str | Position filter (arm_strength): `""`, `"RF"`, `"SS"`, etc. |
 | `pitch_type` | str | Pitch type filter (pitch_movement): `"FF"`, `"SL"`, etc. |
 
