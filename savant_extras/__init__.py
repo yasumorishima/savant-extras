@@ -25,6 +25,7 @@ Available leaderboards
 - **Park factors** (2015+): FanGraphs per-season ballpark run factors for all 30 MLB teams.
 - **Outs Above Average** (OAA): directional defensive value, not in pybaseball.
 - **Outfield Jump** (2016+): reaction/burst/routing metrics, not in pybaseball.
+- **Pitcher Quality** (2020+): Stuff+ / Location+ / Pitching+ from FanGraphs, not in pybaseball.
 
 Basic usage
 -----------
@@ -37,6 +38,7 @@ Basic usage
 from savant_extras.arm_strength import arm_strength, arm_strength_range
 from savant_extras.outs_above_average import outs_above_average, outs_above_average_range
 from savant_extras.outfield_jump import outfield_jump, outfield_jump_range
+from savant_extras.pitcher_quality import pitcher_quality, pitcher_quality_range
 from savant_extras.baserunning import baserunning, baserunning_range
 from savant_extras.basestealing import basestealing, basestealing_range
 from savant_extras.bat_tracking import (
@@ -65,6 +67,8 @@ __all__ = [
     "outs_above_average_range",
     "outfield_jump",
     "outfield_jump_range",
+    "pitcher_quality",
+    "pitcher_quality_range",
     "baserunning",
     "baserunning_range",
     "basestealing",
@@ -99,4 +103,4 @@ __all__ = [
     "year_to_year",
 ]
 
-__version__ = "0.4.0"
+__version__ = "0.4.1"
