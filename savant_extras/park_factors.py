@@ -26,6 +26,7 @@ For pitching park factor, values are inverted (Coors is bad for pitchers).
 from __future__ import annotations
 
 import time
+from io import StringIO
 
 import pandas as pd
 import requests
@@ -114,7 +115,8 @@ def _fetch_one(year: int) -> pd.DataFrame:
     resp.raise_for_status()
 
     # HTML から全テーブルを取得し、Team 列がある最初のものを使う
-    tables = pd.read_html(resp.text)
+    # StringIO wrap required for pandas 2.0+ (raw string triggers lxml file-path detection)
+    tables = pd.read_html(StringIO(resp.text))
     target = None
     for t in tables:
         flat_cols = [str(c).strip() for c in t.columns]
