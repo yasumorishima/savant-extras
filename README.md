@@ -2,7 +2,7 @@
 
 **Baseball Savant leaderboard data — complements pybaseball.**
 
-[pybaseball](https://github.com/jldbc/pybaseball) is great but many Baseball Savant leaderboards are missing or limited. `savant-extras` fills that gap with **16+ leaderboards** covering batting, pitching, catching, baserunning, and fielding — all as simple one-line function calls returning DataFrames.
+[pybaseball](https://github.com/jldbc/pybaseball) is great but many Baseball Savant leaderboards are missing or limited. `savant-extras` fills that gap with **19+ leaderboards** covering batting, pitching, catching, baserunning, fielding, and park factors — all as simple one-line function calls returning DataFrames.
 
 ## Installation
 
@@ -78,6 +78,8 @@ Every leaderboard function returns a `pd.DataFrame`. Most have a `_range()` vari
 | `arm_strength(year)` | 2020+ | Fielder throw speed by position |
 | `baserunning(year)` | — | Total baserunning run value (XB + SB) |
 | `basestealing(year)` | — | Stolen base run value, lead distances |
+| `outs_above_average(year)` | — | Directional OAA, catch probability, fielding runs prevented |
+| `outfield_jump(year)` | 2016+ | Reaction / Burst / Route / Jump metrics for outfielders |
 
 ### Park Factors
 
@@ -150,6 +152,8 @@ df = arm_strength_range(2020, 2024)
 | Baserunning run value | Not supported | ✅ |
 | Basestealing run value | Not supported | ✅ |
 | Timer infractions | Not supported | ✅ |
+| Outs Above Average (OAA) | Not supported | ✅ |
+| Outfield Jump (Reaction/Burst/Route) | Not supported | ✅ |
 | Park factors (FanGraphs) | Not supported | ✅ |
 
 ## Known Issues
