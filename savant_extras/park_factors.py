@@ -26,6 +26,7 @@ For pitching park factor, values are inverted (Coors is bad for pitchers).
 from __future__ import annotations
 
 import time
+import warnings
 from io import StringIO
 
 import pandas as pd
@@ -223,8 +224,12 @@ def park_factors_range(start_season: int, end_season: int,
             time.sleep(sleep)
 
     if not frames:
-        raise RuntimeError(
-            "No park factor data fetched. "
-            "Check network connectivity or FanGraphs page structure."
+        warnings.warn(
+            "park_factors_range: no data fetched for any season. "
+            "FanGraphs may be blocking requests (common in cloud environments "
+            "like Kaggle or Colab). Returning empty DataFrame.",
+            UserWarning,
+            stacklevel=2,
         )
+        return pd.DataFrame()
     return pd.concat(frames, ignore_index=True)

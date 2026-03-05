@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "savant-extras"
-version = "0.4.2"
+version = "0.4.3"
 description = "Baseball Savant leaderboard data — complements pybaseball with 16+ leaderboards"
 readme = "README.md"
 license = { text = "MIT" }

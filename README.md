@@ -156,6 +156,26 @@ df = arm_strength_range(2020, 2024)
 
 - **`swing_take()`**: Baseball Savant の Swing & Take リーダーボードの CSV エンドポイントに障害中（ヘッダーのみ、データ行なし）。現在は空の DataFrame が返ります。上流 API が復旧次第、コード変更なしで動作します。代替として `batted_ball()` や `year_to_year()` を使用してください。
 
+## Cloud Environment Notes
+
+`park_factors()` and `park_factors_range()` fetch data from FanGraphs. In cloud environments (Kaggle, Google Colab, GitHub Actions), FanGraphs may return 403 errors. In that case, `park_factors_range()` returns an empty DataFrame with a warning instead of raising an exception.
+
+**Recommended workaround**: pre-download locally and upload as a dataset file.
+
+```python
+# Run locally and save
+from savant_extras import park_factors_range
+df = park_factors_range(2024, 2025)
+df.to_csv("park_factors.csv", index=False)
+# Upload park_factors.csv to your Kaggle dataset, then read it in the notebook
+```
+
+In Kaggle notebooks, `pybaseball` is not pre-installed. Install both explicitly:
+
+```python
+!pip install savant-extras pybaseball
+```
+
 ## License
 
 MIT
