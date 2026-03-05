@@ -138,8 +138,12 @@ class TestParkFactorsRange:
         assert set(df["season"].unique()) == {2024}
         mock_sleep.assert_not_called()
 
-    def test_all_fail_raises(self):
+    def test_all_fail_returns_empty(self):
         with patch("savant_extras.park_factors.time.sleep"):
             with patch("savant_extras.park_factors.requests.get", side_effect=Exception("network error")):
-                with pytest.raises(RuntimeError, match="No park factor data"):
-                    park_factors_range(2022, 2024)
+                import warnings
+                with warnings.catch_warnings(record=True) as w:
+                    warnings.simplefilter("always")
+                    df = park_factors_range(2022, 2024)
+                assert df.empty
+                assert any("no data fetched" in str(warning.message).lower() for warning in w)
