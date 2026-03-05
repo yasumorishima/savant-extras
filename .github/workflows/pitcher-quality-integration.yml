@@ -1,0 +1,52 @@
+name: Pitcher Quality Integration Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install savant-extras
+        run: pip install -e .
+
+      - name: Fetch pitcher_quality(2024) from FanGraphs
+        run: |
+          python - <<'EOF'
+          from savant_extras import pitcher_quality, pitcher_quality_range
+          import sys
+
+          print("=== pitcher_quality(2024) ===")
+          df = pitcher_quality(2024)
+          print(f"rows: {len(df)}, columns: {list(df.columns)}")
+          print(df[["name", "team", "ip", "stuff_plus", "location_plus", "pitching_plus"]].head(10).to_string(index=False))
+
+          # Basic checks
+          assert len(df) > 0, "No data returned"
+          assert "name" in df.columns, "name column missing"
+          assert "stuff_plus" in df.columns, "stuff_plus column missing"
+          assert "location_plus" in df.columns, "location_plus column missing"
+          assert "pitching_plus" in df.columns, "pitching_plus column missing"
+          assert "mlbam_id" in df.columns, "mlbam_id column missing"
+          assert df["stuff_plus"].notna().any(), "all stuff_plus are NaN"
+
+          avg_stuff = df["stuff_plus"].mean()
+          assert 90 < avg_stuff < 110, f"Average stuff_plus should be near 100, got {avg_stuff:.1f}"
+
+          print(f"\nAll checks passed. {len(df)} pitchers, avg stuff_plus={avg_stuff:.1f}")
+          print(f"\nTop 5 by stuff_plus:")
+          print(df.sort_values('stuff_plus', ascending=False)[['name','team','stuff_plus','pitching_plus']].head(5).to_string(index=False))
+
+          print("\n=== pitcher_quality_range(2022, 2023) ===")
+          df2 = pitcher_quality_range(2022, 2023, sleep=3)
+          print(f"rows: {len(df2)}, seasons: {sorted(df2['season'].unique())}")
+          assert len(df2) > 0, "No range data returned"
+          assert set(df2["season"].unique()) == {2022, 2023}, f"Unexpected seasons: {df2['season'].unique()}"
+          print("range check passed.")
+          EOF
