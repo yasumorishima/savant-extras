@@ -2,7 +2,7 @@
 
 **Baseball Savant leaderboard data — complements pybaseball.**
 
-[pybaseball](https://github.com/jldbc/pybaseball) is great but many Baseball Savant leaderboards are missing or limited. `savant-extras` fills that gap with **21+ leaderboards** covering batting, pitching, catching, baserunning, fielding, and park factors — all as simple one-line function calls returning DataFrames.
+[pybaseball](https://github.com/jldbc/pybaseball) is great but many Baseball Savant leaderboards are missing or limited. `savant-extras` fills that gap with **17 leaderboards** covering batting, pitching, catching, baserunning, fielding, and park factors — all as simple one-line function calls returning DataFrames.
 
 ## Installation
 
@@ -62,7 +62,6 @@ Every leaderboard function returns a `pd.DataFrame`. Most have a `_range()` vari
 | `pitcher_arm_angle(year)` | — | Release point angles and positions |
 | `running_game(year)` | — | Pitcher running game (pickoffs, CS above avg) |
 | `timer_infractions(year)` | 2023+ | Pitch clock violations |
-| `pitcher_quality(year)` | 2020+ | Stuff+ / Location+ / Pitching+ (FanGraphs, not in pybaseball) |
 
 ### Catching
 
@@ -79,8 +78,6 @@ Every leaderboard function returns a `pd.DataFrame`. Most have a `_range()` vari
 | `arm_strength(year)` | 2020+ | Fielder throw speed by position |
 | `baserunning(year)` | — | Total baserunning run value (XB + SB) |
 | `basestealing(year)` | — | Stolen base run value, lead distances |
-| `outs_above_average(year)` | — | Directional OAA, catch probability, fielding runs prevented |
-| `outfield_jump(year)` | 2016+ | Reaction / Burst / Route / Jump metrics for outfielders |
 
 ### Park Factors
 
@@ -153,10 +150,7 @@ df = arm_strength_range(2020, 2024)
 | Baserunning run value | Not supported | ✅ |
 | Basestealing run value | Not supported | ✅ |
 | Timer infractions | Not supported | ✅ |
-| Outs Above Average (OAA) | Not supported | ✅ |
-| Outfield Jump (Reaction/Burst/Route) | Not supported | ✅ |
 | Park factors (FanGraphs) | Not supported | ✅ |
-| Stuff+ / Location+ / Pitching+ | Not supported | ✅ |
 
 ## Known Issues
 
