@@ -1,0 +1,46 @@
+name: Park Factors Integration Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install savant-extras
+        run: pip install -e .
+
+      - name: Fetch park_factors(2024) from FanGraphs
+        run: |
+          python - <<'EOF'
+          from savant_extras import park_factors, park_factors_range
+          import sys
+
+          print("=== park_factors(2024) ===")
+          df = park_factors(2024)
+          print(f"rows: {len(df)}, columns: {list(df.columns)}")
+          print(df[["season", "team", "pf_5yr", "pf_hr"]].to_string(index=False))
+
+          # Basic checks
+          assert len(df) == 30, f"Expected 30 teams, got {len(df)}"
+          assert "COL" in df["team"].values, "COL not found"
+          assert "NYY" in df["team"].values, "NYY not found"
+          assert df["pf_5yr"].notna().all(), "pf_5yr has NaN"
+
+          col_pf = df.loc[df["team"] == "COL", "pf_5yr"].iloc[0]
+          assert col_pf > 105, f"Coors Field pf_5yr should be >105, got {col_pf}"
+
+          print(f"\nAll checks passed. Coors pf_5yr={col_pf}")
+
+          print("\n=== park_factors_range(2023, 2024) ===")
+          df2 = park_factors_range(2023, 2024, sleep=2)
+          print(f"rows: {len(df2)}, seasons: {sorted(df2['season'].unique())}")
+          assert len(df2) == 60, f"Expected 60 rows, got {len(df2)}"
+          print("range check passed.")
+          EOF
