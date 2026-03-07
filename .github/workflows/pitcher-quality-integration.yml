@@ -2,7 +2,11 @@ name: Pitcher Quality Integration Test
 
 on:
   workflow_dispatch:
-
+    inputs:
+      memo:
+        description: 'この実行の意図（必須）'
+        required: true
+        type: string
 jobs:
   integration:
     runs-on: ubuntu-latest
