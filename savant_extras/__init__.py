@@ -92,4 +92,4 @@ __all__ = [
     "year_to_year",
 ]
 
-__version__ = "0.4.2"
+__version__ = "0.4.3"
