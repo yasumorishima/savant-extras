@@ -83,24 +83,53 @@ Every leaderboard function returns a `pd.DataFrame`. Most have a `_range()` vari
 
 | Function | Data from | Description |
 |---|---|---|
-| `park_factors(season)` | 2015+ | Per-season ballpark run factors for all 30 MLB teams (FanGraphs) |
+| `park_factors(season)` | 2015+ | Ballpark run factors per club, 1-year and 3-year windows (Baseball Savant) |
 | `park_factors_range(start, end)` | 2015+ | Multi-season park factors concatenated |
+| `park_factors_fangraphs(season)` | 2015+ | FanGraphs Guts! park factors - the only source here for `pf_5yr` and `pf_fip` |
+| `park_factors_fangraphs_range(start, end)` | 2015+ | Multi-season FanGraphs park factors |
 
-Columns returned: `season`, `team`, `pf_5yr`, `pf_3yr`, `pf_1yr`, `pf_hr`, `pf_1b`, `pf_2b`, `pf_3b`, `pf_so`, `pf_bb`, `pf_fip`.
+Columns returned: `season`, `team`, `venue_id`, `venue_name`, `n_pa_1yr`, `n_pa_3yr`, `pf_1yr`, `pf_3yr`, `pf_3yr_years`, `pf_hr`, `pf_1b`, `pf_2b`, `pf_3b`, `pf_so`, `pf_bb`, `pf_obp`, `pf_hits`, `pf_woba`, `pf_wobacon`, `pf_xwobacon`, `pf_bacon`, `pf_xbacon`, `pf_hardhit`, `pf_wobatto`.
 All factors: 100 = neutral, >100 = hitter-friendly, <100 = pitcher-friendly.
+Every column except `pf_1yr` and `n_pa_1yr` comes from the 3-year window; `pf_3yr_years` records which window that was.
+
+All 30 clubs appear in every season, and every factor column is float64 in every season.
+Two kinds of NaN come from the 3-year view (measured 2026-09-23 over 2015-2026, 360 rows):
+
+- **8 rows have no 3-year window at all**, because the park has no three-year history:
+  2017 ATL, 2018 ATL, 2020 TEX, 2020 TOR, 2021 TEX, 2025 OAK, 2025 TB, 2026 OAK.
+  Their `pf_3yr*` columns are NaN while `pf_1yr` is still filled.
+- **`pf_xwobacon`, `pf_xbacon` and `pf_hardhit` are NaN for all 30 clubs in 2015 and 2016**
+  (60 further rows), because those 3-year windows reach back before Statcast measured
+  batted balls. Those three columns have 68 NaN, not 8.
+
+> **Source changed in 0.5.0.** Through 0.4.4 `park_factors()` scraped FanGraphs Guts!, in a package
+> whose every other function reads Baseball Savant. It now reads Savant too. The FanGraphs table is
+> still here as `park_factors_fangraphs()`, which is the only way to get `pf_5yr` and `pf_fip`.
+>
+> **Columns kept their names but changed their meaning.** `pf_hr`, `pf_1b`, `pf_2b`, `pf_3b`,
+> `pf_so`, `pf_bb` and the runs factor come from Savant's index now, and the two scales disagree:
+> COL 2024 is `pf_hr` 109 here and 131 on the FanGraphs scale. Pin `savant-extras<0.5` or call
+> `park_factors_fangraphs()` if you need the old numbers.
+>
+> The old implementation sent a Chrome User-Agent, and that is what FanGraphs challenges: measured
+> 2026-09-23 from a residential line, a `Chrome/140` UA gets 403 + `cf-mitigated: challenge` while
+> `curl`, no UA, and this package's own UA all get 200. `park_factors_fangraphs()` says who it is
+> instead. Datacenter addresses are blocked separately - pybaseball, which sends the honest default
+> UA, still got 403 for all 12 seasons on a GitHub runner (2026-09-21), so expect the FanGraphs
+> functions to work from a home connection and not from a cloud runner.
 
 ```python
 from savant_extras import park_factors, park_factors_range
 
 # Single season
 df = park_factors(2024)
-print(df[df["team"] == "COL"][["team", "pf_5yr", "pf_hr"]])
-#    team  pf_5yr  pf_hr
-# 5   COL     116    131
+print(df[df["team"] == "COL"][["team", "pf_3yr", "pf_1yr", "pf_hr"]])
+#   team  pf_3yr  pf_1yr  pf_hr
+# 7  COL     125     121    109
 
 # Multi-season (e.g. for model training)
 df = park_factors_range(2020, 2025)
-print(df.shape)  # 6 seasons × 30 teams = 180
+print(df["season"].nunique())  # 6
 ```
 
 ### Common Parameters
@@ -150,7 +179,7 @@ df = arm_strength_range(2020, 2024)
 | Baserunning run value | Not supported | ✅ |
 | Basestealing run value | Not supported | ✅ |
 | Timer infractions | Not supported | ✅ |
-| Park factors (FanGraphs) | Not supported | ✅ |
+| Park factors (Statcast) | Not supported | ✅ |
 
 ## Known Issues
 
@@ -158,17 +187,17 @@ df = arm_strength_range(2020, 2024)
 
 ## Cloud Environment Notes
 
-`park_factors()` and `park_factors_range()` fetch data from FanGraphs. In cloud environments (Kaggle, Google Colab, GitHub Actions), FanGraphs may return 403 errors. In that case, `park_factors_range()` returns an empty DataFrame with a warning instead of raising an exception.
+Every function in this package except the two `*_fangraphs` ones reads Baseball Savant, which answers cloud runners (Kaggle, Google Colab, GitHub Actions) the same way it answers a laptop. Before 0.5.0 `park_factors()` read FanGraphs and returned 403 from those environments; that is no longer the case.
 
-**Recommended workaround**: pre-download locally and upload as a dataset file.
+`park_factors_fangraphs()` still depends on FanGraphs, which blocks datacenter addresses — measured on a GitHub runner 2026-09-21, where pybaseball got 403 for all 12 seasons despite sending the honest default User-Agent. Run it from a home connection and save the result:
 
 ```python
-# Run locally and save
-from savant_extras import park_factors_range
-df = park_factors_range(2024, 2025)
-df.to_csv("park_factors.csv", index=False)
-# Upload park_factors.csv to your Kaggle dataset, then read it in the notebook
+from savant_extras import park_factors_fangraphs_range
+df = park_factors_fangraphs_range(2024, 2025)
+df.to_csv("park_factors_fg.csv", index=False)
 ```
+
+If a fetch fails for every season, both `*_range` functions return an empty DataFrame with a warning rather than raising, and a partial failure warns with the seasons it skipped.
 
 In Kaggle notebooks, `pybaseball` is not pre-installed. Install both explicitly:
 
