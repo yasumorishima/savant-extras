@@ -125,7 +125,7 @@ from savant_extras import park_factors, park_factors_range
 df = park_factors(2024)
 print(df[df["team"] == "COL"][["team", "pf_3yr", "pf_1yr", "pf_hr"]])
 #   team  pf_3yr  pf_1yr  pf_hr
-# 7  COL     125     121    109
+# 7  COL   125.0   121.0  109.0
 
 # Multi-season (e.g. for model training)
 df = park_factors_range(2020, 2025)
