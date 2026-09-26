@@ -1,7 +1,7 @@
 """
 Home runs leaderboard functions.
 
-HR distance, exit velocity, no-doubter rate, expected HR, etc.
+Home run totals, expected HR (xHR), no-doubters / doubters, HR trot time.
 pybaseball does not support this leaderboard.
 """
 

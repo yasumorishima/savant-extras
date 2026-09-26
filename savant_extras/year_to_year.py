@@ -34,7 +34,10 @@ def year_to_year(
     Parameters
     ----------
     year : int
-        Season year (the latest year shown).
+        Chooses which players are listed (those qualified in that season).
+        The columns are not limited by it: every season Savant has, from
+        2015 to the current one, comes back as a column with a delta column
+        between consecutive seasons.
     player_type : str, default ``"batter"``
         ``"batter"`` or ``"pitcher"``.
     stat : str, default ``"xwoba"``

@@ -33,13 +33,15 @@ def running_game(
     year : int
         Season year.
     min_pa : int or str, default ``"q"``
-        Minimum plate appearances. ``"q"`` for qualified.
+        Minimum running-game opportunities (Savant's ``n``; the smallest
+        ``n_init`` returned equals it). ``"q"`` for qualified. The name is
+        kept from earlier versions.
 
     Returns
     -------
     pd.DataFrame
-        Columns include runs_prevented_on_running_attr, n_sb, n_cs,
-        n_pk, rate_sbx, pop_time, etc.
+        Columns include runs_prevented_on_running_attr, n_init, n_sb,
+        n_cs, n_pk, rate_sbx, etc.
     """
     url = _BASE_URL.format(year=year, min_pa=min_pa)
     response = requests.get(url, timeout=30)

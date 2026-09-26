@@ -11,7 +11,7 @@ twelve functions were sending parameters Savant no longer reads:
 | Function | Was sending | Effect | Now sends |
 |---|---|---|---|
 | `baserunning`, `basestealing`, `catcher_blocking`, `catcher_throwing`, `running_game` | `year=`, `min=` | every season returned the current one; minimum ignored | `season_start=`/`season_end=`, `n=` |
-| `catcher_stance` | `year=`, `min=` | 2 league-summary rows, not catchers | `type=catcher&seasonStart=`/`seasonEnd=`, `minPitches=` |
+| `catcher_stance` | `year=`, `min=` | league-summary rows (one per season), not catchers | `type=catcher&seasonStart=`/`seasonEnd=`, `minPitches=` |
 | `pitcher_arm_angle`, `timer_infractions` | `year=` | every season returned the current one | `season=` |
 | `pitch_movement` | `pitchType=` | always four-seamers | `pitch_type=` (default now `"FF"`) |
 | `home_runs` | `type=exit_velocity/distance` | argument had no effect | `player_type=Batter/Pitcher`, `cat=adj_xhr/xhr`, `min=` |
@@ -23,10 +23,22 @@ twelve functions were sending parameters Savant no longer reads:
 files will look plausible - the same players, the same columns - and be the
 same table repeated under different years.
 
-To stop this recurring silently, fourteen functions now compare the season
+To stop this recurring silently, eleven functions now compare the season
 column Savant returns with the season asked for and raise `ValueError` on a
 mismatch, and `pitch_movement` does the same for the pitch type.
+`pitcher_arm_angle`, `arm_strength` and `pitch_tempo` return no season
+column, so for them only the live tests (which check that 2024 and 2025
+differ) guard against a season being ignored.
 `home_runs(hr_type=...)` still runs but warns `DeprecationWarning`.
+
+**Breaking for positional callers:** the second positional argument of
+`home_runs` is now `player_type`, so `home_runs(2024, "distance")` raises
+`ValueError`; pass `hr_type=` by keyword (it is ignored) or drop it.
+`arm_strength(position=...)` now raises on values outside
+`"", "1B", "2B", "3B", "SS", "LF", "CF", "RF", "Outfielder", "2B/SS/3B"`
+instead of passing them to Savant, which ignored them anyway.
+`pitch_movement`'s default `pitch_type` is now `"FF"`, which is what an
+empty string always returned.
 
 ### Fixed: `swing_take()` returned no rows for every season
 

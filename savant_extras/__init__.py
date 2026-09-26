@@ -10,7 +10,7 @@ Available leaderboards
 - **Pitch tempo** (2010+): pace metrics by pitcher or batter.
 - **Arm strength** (2020+): fielder throw speed and accuracy.
 - **Batted ball** profile: GB/FB/LD rates, pull/oppo splits.
-- **Home runs**: distance, exit velocity, no-doubters, xHR.
+- **Home runs**: HR totals, xHR, no-doubters, trot time; hit or allowed.
 - **Pitch movement**: horizontal/vertical break by pitch type.
 - **Swing & take**: run values by zone (heart/shadow/chase/waste).
 - **Year-to-year**: xwOBA changes across seasons.
