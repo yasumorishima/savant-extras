@@ -7,17 +7,29 @@ pybaseball does not support arm strength leaderboards.
 
 from __future__ import annotations
 
-import io
 import time
 
 import pandas as pd
 import requests
 
+from savant_extras._http import check_season, parse_savant_csv
+
 _BASE_URL = (
     "https://baseballsavant.mlb.com/leaderboard/arm-strength"
-    "?type=player&year={year}&pos={position}"
+    "?type=player&year={year}"
     "&team=&minThrows={min_throws}&csv=true"
 )
+
+
+# Through 0.5.0 ``position`` was sent as ``pos=``, which Savant ignores, so
+# every position returned the full table. The page's menu values are these
+# column names; the filter is applied here instead.
+_POSITION_COLUMNS = {
+    "": None,
+    "1B": "arm_1b", "2B": "arm_2b", "3B": "arm_3b", "SS": "arm_ss",
+    "LF": "arm_lf", "CF": "arm_cf", "RF": "arm_rf",
+    "Outfielder": "arm_of", "2B/SS/3B": "arm_inf",
+}
 
 
 def arm_strength(
@@ -55,20 +67,24 @@ def arm_strength(
     >>> df = arm_strength(2024)
     >>> df = arm_strength(2024, position="RF", min_throws=50)
     """
-    url = _BASE_URL.format(
-        year=year,
-        position=position,
-        min_throws=min_throws,
-    )
+    if position not in _POSITION_COLUMNS:
+        raise ValueError(
+            f"position must be one of {sorted(_POSITION_COLUMNS)}, got {position!r}"
+        )
+    column = _POSITION_COLUMNS[position]
+    url = _BASE_URL.format(year=year, min_throws=min_throws)
 
     response = requests.get(url, timeout=30)
     response.raise_for_status()
 
     text = response.content.decode("utf-8")
-    if not text.strip() or text.strip().startswith("<!"):
-        return pd.DataFrame()
-
-    df = pd.read_csv(io.StringIO(text))
+    df = check_season(parse_savant_csv(text, url), year, url)
+    if column and not df.empty:
+        # Savant's position menu only chooses which arm column the page shows;
+        # the CSV always has every column. Keep the fielders measured there.
+        if column not in df.columns:
+            raise ValueError(f"arm strength CSV has no {column!r} column: {url}")
+        df = df[df[column].notna()].reset_index(drop=True)
     return df
 
 

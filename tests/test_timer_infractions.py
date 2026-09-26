@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
@@ -21,6 +22,22 @@ def _mock_response(csv_text):
     mock.raise_for_status = MagicMock()
     return mock
 
+_YEAR_IN_URL = re.compile(r"[?&](?:season_start|seasonStart|season|year)=(\d{4})")
+
+
+def _per_year(csv_text):
+    """Serve the fixture under the season the URL asked for.
+
+    Every season-keyed function raises when the rows belong to a different
+    season than requested, so a range test must not return the 2024 fixture
+    for 2022 and 2023.
+    """
+    def _serve(url, *args, **kwargs):
+        year = _YEAR_IN_URL.search(url).group(1)
+        return _mock_response(csv_text.replace("2024", year))
+    return _serve
+
+
 
 class TestTimerInfractions:
     @patch("savant_extras.timer_infractions.requests.get")
@@ -35,7 +52,8 @@ class TestTimerInfractions:
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         timer_infractions(2024)
         url = mock_get.call_args[0][0]
-        assert "year=2024" in url
+        assert "season=2024" in url
+        assert "year=" not in url
 
     @patch("savant_extras.timer_infractions.requests.get")
     def test_empty_response(self, mock_get):
@@ -46,19 +64,20 @@ class TestTimerInfractions:
 class TestTimerInfractionsRange:
     @patch("savant_extras.timer_infractions.requests.get")
     def test_year_column(self, mock_get):
-        mock_get.return_value = _mock_response(SAMPLE_CSV)
+        mock_get.side_effect = _per_year(SAMPLE_CSV)
         df = timer_infractions_range(2023, 2024)
         assert "year" in df.columns
+        assert set(df["year"]) == {2023, 2024}
 
     @patch("savant_extras.timer_infractions.requests.get")
     def test_api_calls(self, mock_get):
-        mock_get.return_value = _mock_response(SAMPLE_CSV)
+        mock_get.side_effect = _per_year(SAMPLE_CSV)
         timer_infractions_range(2023, 2024)
         assert mock_get.call_count == 2
 
     @patch("savant_extras.timer_infractions.time.sleep")
     @patch("savant_extras.timer_infractions.requests.get")
     def test_sleep(self, mock_get, mock_sleep):
-        mock_get.return_value = _mock_response(SAMPLE_CSV)
+        mock_get.side_effect = _per_year(SAMPLE_CSV)
         timer_infractions_range(2023, 2024)
         assert mock_sleep.call_count == 1

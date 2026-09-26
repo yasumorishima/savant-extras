@@ -8,15 +8,16 @@ pybaseball does not support this leaderboard.
 
 from __future__ import annotations
 
-import io
 import time
 
 import pandas as pd
 import requests
 
+from savant_extras._http import check_season, parse_savant_csv
+
 _BASE_URL = (
     "https://baseballsavant.mlb.com/leaderboard/pitch-timer-infractions"
-    "?year={year}&csv=true"
+    "?season={year}&csv=true"
 )
 
 
@@ -42,10 +43,7 @@ def timer_infractions(
     response.raise_for_status()
 
     text = response.content.decode("utf-8")
-    if not text.strip() or text.strip().startswith("<!"):
-        return pd.DataFrame()
-
-    return pd.read_csv(io.StringIO(text))
+    return check_season(parse_savant_csv(text, url), year, url)
 
 
 def timer_infractions_range(

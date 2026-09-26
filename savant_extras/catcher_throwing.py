@@ -1,21 +1,23 @@
 """
 Catcher throwing leaderboard functions.
 
-Caught stealing above average, pop time, exchange time.
-pybaseball does not support this leaderboard.
+Caught stealing above average and stealing runs.
+pybaseball does not read this leaderboard; it reads the separate pop-time
+leaderboard (``statcast_catcher_poptime``).
 """
 
 from __future__ import annotations
 
-import io
 import time
 
 import pandas as pd
 import requests
 
+from savant_extras._http import check_season, parse_savant_csv
+
 _BASE_URL = (
     "https://baseballsavant.mlb.com/leaderboard/catcher-throwing"
-    "?year={year}&min={min_attempts}&csv=true"
+    "?game_type=Regular&season_start={year}&season_end={year}&n={min_attempts}&csv=true"
 )
 
 
@@ -44,10 +46,7 @@ def catcher_throwing(
     response.raise_for_status()
 
     text = response.content.decode("utf-8")
-    if not text.strip() or text.strip().startswith("<!"):
-        return pd.DataFrame()
-
-    return pd.read_csv(io.StringIO(text))
+    return check_season(parse_savant_csv(text, url), year, url)
 
 
 def catcher_throwing_range(
