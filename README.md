@@ -49,16 +49,35 @@ Every leaderboard function returns a `pd.DataFrame`. Most have a `_range()` vari
 | `bat_tracking_monthly(year)` | 2024+ | Monthly bat tracking (Apr–Oct) |
 | `bat_tracking_splits(year)` | 2024+ | First-half / second-half splits |
 | `batted_ball(year)` | — | GB/FB/LD rates, pull/oppo splits |
-| `home_runs(year)` | — | HR distance, exit velocity, xHR, no-doubters |
-| `swing_take(year)` | — | Run values by zone (heart/shadow/chase/waste) |
-| `year_to_year(year)` | — | xwOBA changes across seasons |
+| `home_runs(year, player_type="batter", category="adj_xhr")` | — | HRs hit (`batter`) or allowed (`pitcher`), xHR, no-doubters |
+| `swing_take(year)` | — | Run values by zone (heart/shadow/chase/waste). Returned no rows through 0.5.0 — fixed in 0.6.0 |
+| `year_to_year(year, player_type="batter", stat="xwoba")` | — | A stat (xwOBA by default) across seasons |
+
+### ABS challenges & minor leagues (new in 0.6.0)
+
+| Function | Data from | Description |
+|---|---|---|
+| `abs_challenges(year, level="mlb", challenge_type="batter")` | MLB 2026+ / AAA 2025+ | ABS challenge results vs. expected overturn rate, with run values and the MLBAM `player_id` (the site CSV export has neither); `challenge_type` is `batter`, `pitcher` or `catcher` |
+| `abs_challenges_range(start, end, ...)` | same | One request per season, concatenated |
+| `statcast_minors(start_date, end_date, level="AAA")` | AAA 2023+ | Pitch-level Statcast for Triple-A (ball flight and `arm_angle`; no bat tracking in the minors) |
+
+```python
+from savant_extras import abs_challenges, statcast_minors
+
+# Who gains the most from challenging, a year before and after MLB adopted ABS
+aaa = abs_challenges(2025, level="aaa")
+mlb = abs_challenges(2026)
+
+# One week of Triple-A pitches
+pitches = statcast_minors("2025-06-01", "2025-06-07")
+```
 
 ### Pitching
 
 | Function | Data from | Description |
 |---|---|---|
 | `pitch_tempo(year)` | 2010+ | Pace metrics (median seconds, hot/warm/cold) |
-| `pitch_movement(year)` | — | Horizontal/vertical break by pitch type |
+| `pitch_movement(year, pitch_type="FF")` | — | Horizontal/vertical break for one pitch type |
 | `pitcher_arm_angle(year)` | — | Release point angles and positions |
 | `running_game(year)` | — | Pitcher running game (pickoffs, CS above avg) |
 | `timer_infractions(year)` | 2023+ | Pitch clock violations |
@@ -75,7 +94,7 @@ Every leaderboard function returns a `pd.DataFrame`. Most have a `_range()` vari
 
 | Function | Data from | Description |
 |---|---|---|
-| `arm_strength(year)` | 2020+ | Fielder throw speed by position |
+| `arm_strength(year, position="")` | 2020+ | Fielder throw speed; `position` keeps fielders measured there |
 | `baserunning(year)` | — | Total baserunning run value (XB + SB) |
 | `basestealing(year)` | — | Stolen base run value, lead distances |
 
@@ -168,22 +187,26 @@ df = arm_strength_range(2020, 2024)
 | Arm strength | Not supported | ✅ |
 | Batted ball profile | Not supported | ✅ |
 | Home runs | Not supported | ✅ |
-| Pitch movement | Not supported | ✅ |
-| Swing & take | Not supported | ✅ |
+| Pitch movement | `statcast_pitcher_pitch_movement` | ✅ |
+| Swing & take | `statcast_batter_run_value` / `statcast_pitcher_run_value` | ✅ |
 | Year-to-year changes | Not supported | ✅ |
 | Pitcher arm angle | Not supported | ✅ |
 | Running game (pitcher) | Not supported | ✅ |
 | Catcher blocking | Not supported | ✅ |
-| Catcher throwing | Not supported | ✅ |
+| Catcher throwing | Pop time only (`statcast_catcher_poptime`) | ✅ |
 | Catcher stance | Not supported | ✅ |
 | Baserunning run value | Not supported | ✅ |
 | Basestealing run value | Not supported | ✅ |
 | Timer infractions | Not supported | ✅ |
 | Park factors (Statcast) | Not supported | ✅ |
+| ABS challenges (MLB + AAA) | Not supported | ✅ |
+| Minor-league Statcast (AAA) | Not supported (`statcast()` has no minors switch) | ✅ |
 
 ## Known Issues
 
-- **`swing_take()`**: Baseball Savant の Swing & Take リーダーボードの CSV エンドポイントに障害中（ヘッダーのみ、データ行なし）。現在は空の DataFrame が返ります。上流 API が復旧次第、コード変更なしで動作します。代替として `batted_ball()` や `year_to_year()` を使用してください。
+- **Before 0.6.0, twelve functions returned the wrong season or ignored a filter** - Savant renamed their query parameters and, when it does not recognise one, silently serves the current season. `baserunning`, `basestealing`, `catcher_blocking`, `catcher_throwing`, `running_game`, `pitcher_arm_angle` and `timer_infractions` returned the same table for every year; `catcher_stance` returned league summary rows; `pitch_movement` always returned four-seamers; `home_runs`, `year_to_year` and `arm_strength` ignored their filters. **Re-fetch anything saved with those versions.** 0.6.0 sends the parameters Savant reads and raises `ValueError` when the season it returns is not the one asked for. See the CHANGELOG for the table.
+- **`swing_take()` returned no rows through 0.5.0.** This was a bug in this package, not an upstream outage as this section used to say: it sent `type=batter`, and the leaderboard's parameter is `group=Batter` / `group=Pitcher` (case-sensitive). Fixed in 0.6.0.
+- **Empty answers now warn.** Savant replies to a request it cannot serve with HTTP 200 and either an HTML page or a CSV header with no rows. Every function used to turn that into an empty DataFrame silently, which is how the `swing_take` bug went unnoticed. They now emit `savant_extras.EmptySavantResponse` (a `UserWarning`) with the URL; filter it with `warnings.simplefilter("ignore", EmptySavantResponse)` if an empty season is expected.
 
 ## Cloud Environment Notes
 

@@ -42,7 +42,9 @@ class TestYearToYear:
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         year_to_year(2024, player_type="pitcher")
         url = mock_get.call_args[0][0]
-        assert "type=pitcher" in url
+        assert "group=Pitcher" in url
+        assert "type=xwoba" in url
+        assert "type=pitcher" not in url
 
     def test_invalid_player_type(self):
         with pytest.raises(ValueError):

@@ -17,6 +17,13 @@ SAMPLE_CSV = (
     "\"Soto, Juan\",665742,NYY,RF,Right Field,180,89.1,85.2\n"
 )
 
+POSITION_CSV = (
+    "fielder_name,player_id,arm_overall,arm_ss,arm_rf\n"
+    "\"Betts, Mookie\",605141,88.5,,92.3\n"
+    "\"Witt Jr., Bobby\",677951,90.1,91.0,\n"
+    "\"Kwan, Steven\",680757,80.0,,\n"
+)
+
 
 def _mock_response(csv_text: str) -> MagicMock:
     mock = MagicMock()
@@ -49,17 +56,29 @@ class TestArmStrength:
 
     @patch("savant_extras.arm_strength.requests.get")
     def test_position_filter(self, mock_get):
-        mock_get.return_value = _mock_response(SAMPLE_CSV)
-        arm_strength(2024, position="RF")
+        mock_get.return_value = _mock_response(POSITION_CSV)
+        df = arm_strength(2024, position="RF")
         url = mock_get.call_args[0][0]
-        assert "pos=RF" in url
+        assert "pos=" not in url
+        assert list(df["player_id"]) == [605141]
 
     @patch("savant_extras.arm_strength.requests.get")
     def test_default_position_empty(self, mock_get):
-        mock_get.return_value = _mock_response(SAMPLE_CSV)
-        arm_strength(2024)
+        mock_get.return_value = _mock_response(POSITION_CSV)
+        df = arm_strength(2024)
         url = mock_get.call_args[0][0]
-        assert "pos=&" in url or "pos=" in url
+        assert "pos=" not in url
+        assert len(df) == 3
+
+    @patch("savant_extras.arm_strength.requests.get")
+    def test_position_missing_column_raises(self, mock_get):
+        mock_get.return_value = _mock_response(SAMPLE_CSV)
+        with pytest.raises(ValueError, match="arm_rf"):
+            arm_strength(2024, position="RF")
+
+    def test_unknown_position_raises(self):
+        with pytest.raises(ValueError, match="position"):
+            arm_strength(2024, position="C")
 
     @patch("savant_extras.arm_strength.requests.get")
     def test_min_throws_passed(self, mock_get):

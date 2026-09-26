@@ -8,15 +8,16 @@ pybaseball does not support this leaderboard.
 
 from __future__ import annotations
 
-import io
 import time
 
 import pandas as pd
 import requests
 
+from savant_extras._http import check_season, parse_savant_csv
+
 _BASE_URL = (
     "https://baseballsavant.mlb.com/leaderboard/pitcher-running-game"
-    "?year={year}&min={min_pa}&csv=true"
+    "?game_type=Regular&season_start={year}&season_end={year}&n={min_pa}&csv=true"
 )
 
 
@@ -32,23 +33,22 @@ def running_game(
     year : int
         Season year.
     min_pa : int or str, default ``"q"``
-        Minimum plate appearances. ``"q"`` for qualified.
+        Minimum running-game opportunities (Savant's ``n``; the smallest
+        ``n_init`` returned equals it). ``"q"`` for qualified. The name is
+        kept from earlier versions.
 
     Returns
     -------
     pd.DataFrame
-        Columns include runs_prevented_on_running_attr, n_sb, n_cs,
-        n_pk, rate_sbx, pop_time, etc.
+        Columns include runs_prevented_on_running_attr, n_init, n_sb,
+        n_cs, n_pk, rate_sbx, etc.
     """
     url = _BASE_URL.format(year=year, min_pa=min_pa)
     response = requests.get(url, timeout=30)
     response.raise_for_status()
 
     text = response.content.decode("utf-8")
-    if not text.strip() or text.strip().startswith("<!"):
-        return pd.DataFrame()
-
-    return pd.read_csv(io.StringIO(text))
+    return check_season(parse_savant_csv(text, url), year, url)
 
 
 def running_game_range(

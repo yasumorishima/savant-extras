@@ -8,12 +8,13 @@ savant-extras supports arbitrary date ranges for custom splits.
 
 from __future__ import annotations
 
-import io
 import time
 import warnings
 
 import pandas as pd
 import requests
+
+from savant_extras._http import parse_savant_csv
 
 _HAWK_EYE_START_YEAR = 2024
 
@@ -115,11 +116,7 @@ def bat_tracking(
     response.raise_for_status()
 
     text = response.content.decode("utf-8")
-    if not text.strip() or text.strip().startswith("<!"):
-        return pd.DataFrame()
-
-    df = pd.read_csv(io.StringIO(text))
-    return df
+    return parse_savant_csv(text, url)
 
 
 def bat_tracking_monthly(

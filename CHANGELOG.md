@@ -1,5 +1,95 @@
 # Changelog
 
+## 0.6.0
+
+### Fixed: twelve functions returned the wrong data, silently
+
+Savant ignores a query parameter it does not recognise and answers with
+HTTP 200 and the **current season's** table. Measured live on 2026-09-27,
+twelve functions were sending parameters Savant no longer reads:
+
+| Function | Was sending | Effect | Now sends |
+|---|---|---|---|
+| `baserunning`, `basestealing`, `catcher_blocking`, `catcher_throwing`, `running_game` | `year=`, `min=` | every season returned the current one; minimum ignored | `season_start=`/`season_end=`, `n=` |
+| `catcher_stance` | `year=`, `min=` | league-summary rows (one per season), not catchers | `type=catcher&seasonStart=`/`seasonEnd=`, `minPitches=` |
+| `pitcher_arm_angle`, `timer_infractions` | `year=` | every season returned the current one | `season=` |
+| `pitch_movement` | `pitchType=` | always four-seamers | `pitch_type=` (default now `"FF"`) |
+| `home_runs` | `type=exit_velocity/distance` | argument had no effect | `player_type=Batter/Pitcher`, `cat=adj_xhr/xhr`, `min=` |
+| `year_to_year` | `type=batter/pitcher` | always batters, and not xwOBA | `group=Batter/Pitcher`, `type=<stat>` (default `xwoba`) |
+| `arm_strength` | `pos=` | position ignored | filtered locally on the `arm_<pos>` column |
+| `swing_take` | `type=batter` | zero rows | `group=Batter/Pitcher` |
+
+**If you saved data with these functions, re-fetch it.** Across seasons the
+files will look plausible - the same players, the same columns - and be the
+same table repeated under different years.
+
+To stop this recurring silently, eleven functions now compare the season
+column Savant returns with the season asked for and raise `ValueError` on a
+mismatch, and `pitch_movement` does the same for the pitch type.
+`pitcher_arm_angle`, `arm_strength` and `pitch_tempo` return no season
+column, so for them only the live tests (which check that 2024 and 2025
+differ) guard against a season being ignored.
+`home_runs(hr_type=...)` still runs but warns `DeprecationWarning`.
+
+**Breaking for positional callers:** the second positional argument of
+`home_runs` is now `player_type`, so `home_runs(2024, "distance")` raises
+`ValueError`; pass `hr_type=` by keyword (it is ignored) or drop it.
+`arm_strength(position=...)` now raises on values outside
+`"", "1B", "2B", "3B", "SS", "LF", "CF", "RF", "Outfielder", "2B/SS/3B"`
+instead of passing them to Savant, which ignored them anyway.
+`pitch_movement`'s default `pitch_type` is now `"FF"`, which is what an
+empty string always returned.
+
+### Fixed: `swing_take()` returned no rows for every season
+
+It sent `type=batter`, which Savant answers with a CSV header and no rows.
+The parameter is `group`, and its values are case-sensitive (`Batter` /
+`Pitcher`). The README blamed an upstream outage; that was wrong. The unit
+tests mocked every request, so nothing ever checked a real answer - see
+the live tests below.
+
+### Empty answers warn instead of passing silently
+
+All 16 leaderboard functions now share one parser. An HTML page, an empty
+body, or a header-only CSV still returns an empty DataFrame, and now also
+emits `EmptySavantResponse` (a `UserWarning`) naming the URL.
+The `*_range` functions therefore warn once per empty season (for example
+a season before a leaderboard existed); filter `EmptySavantResponse` if that
+is expected.
+
+### Added: `abs_challenges()` / `abs_challenges_range()`
+
+The ABS challenge leaderboard: MLB from 2026, Triple-A from 2025, by
+batter, pitcher or catcher. It reads the JSON the leaderboard page embeds
+rather than its `csv=true` export: same rows, but 86 fields instead of 36,
+including the MLBAM `player_id` (the CSV has only a display name) and the
+run-value columns. Savant ignores parameters it does not know, so
+the function checks that the `year` and `level` it got back are the ones
+it asked for and raises otherwise.
+
+### Added: `statcast_minors()`
+
+Pitch-level Statcast for Triple-A (and the Class-A clubs Savant serves),
+one request per day. It always sends `minors=true` - without it `hfLevel`
+is ignored - and raises if a returned game is between two major-league
+clubs. Bat tracking columns are empty in the minors; `arm_angle` is filled
+from 2023.
+
+### Corrected claims about pybaseball
+
+The README and two module docstrings said pybaseball does not read the
+pitch movement and swing & take leaderboards. It does
+(`statcast_pitcher_pitch_movement`, `statcast_batter_run_value`,
+`statcast_pitcher_run_value`). Catcher throwing is noted as overlapping
+with `statcast_catcher_poptime` for pop time.
+
+### Live tests
+
+`tests/live/` makes real requests to Savant and is skipped unless
+`SAVANT_LIVE=1`. It checks, for every function, that changing the season
+or filter argument changes the answer. The `Live Savant` workflow runs it on pull requests and
+on demand.
+
 ## 0.5.0
 
 ### Park factors moved from FanGraphs to Baseball Savant

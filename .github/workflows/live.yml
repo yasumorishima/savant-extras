@@ -1,18 +1,25 @@
-name: Tests
+name: Live Savant
+
+# Real requests to Baseball Savant (tests/live). The unit tests mock every
+# request, so they cannot notice Savant changing a parameter or a column.
 
 on:
-  push:
-    branches: [master]
   pull_request:
     branches: [master]
+  workflow_dispatch:
+    inputs:
+      memo:
+        description: 'この実行の意図（必須）'
+        required: true
+        type: string
 
 permissions:
   contents: read
 
 jobs:
-  test:
+  live:
     runs-on: ubuntu-latest
-
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -25,5 +32,7 @@ jobs:
       - name: Install dependencies
         run: pip install -e ".[dev]"
 
-      - name: Run tests
-        run: pytest tests/ -v
+      - name: Run live tests
+        env:
+          SAVANT_LIVE: "1"
+        run: pytest tests/live -v

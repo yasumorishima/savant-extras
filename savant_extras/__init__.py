@@ -10,7 +10,7 @@ Available leaderboards
 - **Pitch tempo** (2010+): pace metrics by pitcher or batter.
 - **Arm strength** (2020+): fielder throw speed and accuracy.
 - **Batted ball** profile: GB/FB/LD rates, pull/oppo splits.
-- **Home runs**: distance, exit velocity, no-doubters, xHR.
+- **Home runs**: HR totals, xHR, no-doubters, trot time; hit or allowed.
 - **Pitch movement**: horizontal/vertical break by pitch type.
 - **Swing & take**: run values by zone (heart/shadow/chase/waste).
 - **Year-to-year**: xwOBA changes across seasons.
@@ -22,6 +22,10 @@ Available leaderboards
 - **Baserunning run value**: total baserunning value.
 - **Basestealing run value**: stolen base run value.
 - **Timer infractions** (2023+): pitch clock violations.
+- **ABS challenges** (MLB 2026+, Triple-A 2025+): challenge results
+  against an expected overturn rate, by batter, pitcher or catcher.
+- **Minor-league Statcast** (Triple-A 2023+): pitch-level search with
+  ``minors=true``, which pybaseball's ``statcast()`` cannot send.
 - **Park factors** (2015+): Statcast ballpark run factors, 1-year and 3-year
   windows. The FanGraphs table is still available as ``park_factors_fangraphs``.
 
@@ -33,6 +37,8 @@ Basic usage
 >>> df = arm_strength(2024, position="Outfielder")
 """
 
+from savant_extras._http import EmptySavantResponse
+from savant_extras.abs_challenges import abs_challenges, abs_challenges_range
 from savant_extras.arm_strength import arm_strength, arm_strength_range
 from savant_extras.baserunning import baserunning, baserunning_range
 from savant_extras.basestealing import basestealing, basestealing_range
@@ -57,9 +63,13 @@ from savant_extras.park_factors_fangraphs import (
     park_factors_fangraphs,
     park_factors_fangraphs_range,
 )
+from savant_extras.statcast_minors import statcast_minors
 from savant_extras.year_to_year import year_to_year
 
 __all__ = [
+    "EmptySavantResponse",
+    "abs_challenges",
+    "abs_challenges_range",
     "arm_strength",
     "arm_strength_range",
     "baserunning",
@@ -95,7 +105,8 @@ __all__ = [
     "park_factors_range",
     "park_factors_fangraphs",
     "park_factors_fangraphs_range",
+    "statcast_minors",
     "year_to_year",
 ]
 
-__version__ = "0.5.0"
+__version__ = "0.6.0"

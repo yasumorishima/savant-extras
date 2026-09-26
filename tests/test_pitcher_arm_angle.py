@@ -36,7 +36,8 @@ class TestPitcherArmAngle:
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         pitcher_arm_angle(2024)
         url = mock_get.call_args[0][0]
-        assert "year=2024" in url
+        assert "season=2024" in url
+        assert "year=" not in url
 
     @patch("savant_extras.pitcher_arm_angle.requests.get")
     def test_empty_response(self, mock_get):

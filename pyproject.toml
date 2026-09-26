@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "savant-extras"
-version = "0.5.0"
+version = "0.6.0"
 description = "Baseball Savant leaderboard data — complements pybaseball with 16+ leaderboards"
 readme = "README.md"
 license = { text = "MIT" }
@@ -12,7 +12,7 @@ requires-python = ">=3.9"
 authors = [
   { name = "yasumorishima" },
 ]
-keywords = ["baseball", "mlb", "statcast", "baseball-savant", "bat-tracking", "pitch-tempo", "arm-strength", "pitch-movement", "catcher", "baserunning", "pybaseball"]
+keywords = ["baseball", "mlb", "statcast", "baseball-savant", "bat-tracking", "pitch-tempo", "arm-strength", "pitch-movement", "catcher", "baserunning", "pybaseball", "abs-challenge", "minor-league", "triple-a"]
 classifiers = [
   "Programming Language :: Python :: 3",
   "License :: OSI Approved :: MIT License",

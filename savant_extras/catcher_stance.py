@@ -7,15 +7,16 @@ pybaseball does not support this leaderboard.
 
 from __future__ import annotations
 
-import io
 import time
 
 import pandas as pd
 import requests
 
+from savant_extras._http import check_season, parse_savant_csv
+
 _BASE_URL = (
     "https://baseballsavant.mlb.com/leaderboard/catcher-stance"
-    "?year={year}&min={min_pitches}&csv=true"
+    "?type=catcher&gameType=Regular&seasonStart={year}&seasonEnd={year}&minPitches={min_pitches}&minResults=1&csv=true"
 )
 
 
@@ -44,10 +45,7 @@ def catcher_stance(
     response.raise_for_status()
 
     text = response.content.decode("utf-8")
-    if not text.strip() or text.strip().startswith("<!"):
-        return pd.DataFrame()
-
-    return pd.read_csv(io.StringIO(text))
+    return check_season(parse_savant_csv(text, url), year, url)
 
 
 def catcher_stance_range(
