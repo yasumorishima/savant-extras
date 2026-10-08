@@ -4,7 +4,7 @@
 
 No change to the library code.
 
-- The PyPI summary is the current one (it still said "16+ leaderboards"; the package has 17).
+- The PyPI summary is the current one (it still said "16+ leaderboards"; the package wraps 17 Savant leaderboards, plus FanGraphs park factors, ABS challenges and Triple-A Statcast).
 - Classifiers list every Python the CI now tests: 3.9 to 3.14.
 - Tests patch `requests.get`, `time.sleep` and `pandas.read_html` directly, so they run on 3.9 and 3.10 too (266 tests failed there before, because the old patch targets resolved to same-named re-exports).
 - The live Savant tests also run every Monday, not only on pull requests.
