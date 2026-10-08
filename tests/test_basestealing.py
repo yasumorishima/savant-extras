@@ -40,14 +40,14 @@ def _per_year(csv_text):
 
 
 class TestBasestealing:
-    @patch("savant_extras.basestealing.requests.get")
+    @patch("requests.get")
     def test_returns_dataframe(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         df = basestealing(2024)
         assert isinstance(df, pd.DataFrame)
         assert len(df) == 1
 
-    @patch("savant_extras.basestealing.requests.get")
+    @patch("requests.get")
     def test_url_contains_year(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         basestealing(2024)
@@ -56,28 +56,28 @@ class TestBasestealing:
         assert "game_type=Regular" in url
         assert "year=" not in url and "min=" not in url
 
-    @patch("savant_extras.basestealing.requests.get")
+    @patch("requests.get")
     def test_empty_response(self, mock_get):
         mock_get.return_value = _mock_response("")
         assert basestealing(2024).empty
 
 
 class TestBasestealingRange:
-    @patch("savant_extras.basestealing.requests.get")
+    @patch("requests.get")
     def test_year_column(self, mock_get):
         mock_get.side_effect = _per_year(SAMPLE_CSV)
         df = basestealing_range(2023, 2024)
         assert "year" in df.columns
         assert set(df["year"]) == {2023, 2024}
 
-    @patch("savant_extras.basestealing.requests.get")
+    @patch("requests.get")
     def test_api_calls(self, mock_get):
         mock_get.side_effect = _per_year(SAMPLE_CSV)
         basestealing_range(2022, 2024)
         assert mock_get.call_count == 3
 
-    @patch("savant_extras.basestealing.time.sleep")
-    @patch("savant_extras.basestealing.requests.get")
+    @patch("time.sleep")
+    @patch("requests.get")
     def test_sleep(self, mock_get, mock_sleep):
         mock_get.side_effect = _per_year(SAMPLE_CSV)
         basestealing_range(2022, 2024)

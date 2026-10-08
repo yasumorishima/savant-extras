@@ -41,21 +41,21 @@ def _per_year(csv_text):
 
 
 class TestHomeRuns:
-    @patch("savant_extras.home_runs.requests.get")
+    @patch("requests.get")
     def test_returns_dataframe(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         df = home_runs(2024)
         assert isinstance(df, pd.DataFrame)
         assert len(df) == 1
 
-    @patch("savant_extras.home_runs.requests.get")
+    @patch("requests.get")
     def test_url_contains_year(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         home_runs(2024)
         url = mock_get.call_args[0][0]
         assert "year=2024" in url
 
-    @patch("savant_extras.home_runs.requests.get")
+    @patch("requests.get")
     def test_hr_type_not_in_url(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         with pytest.warns(DeprecationWarning, match="hr_type"):
@@ -65,7 +65,7 @@ class TestHomeRuns:
         assert "distance" not in url
         assert "player_type=Batter" in url and "cat=adj_xhr" in url and "min=0" in url
 
-    @patch("savant_extras.home_runs.requests.get")
+    @patch("requests.get")
     def test_pitcher_category_min_in_url(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         home_runs(2024, player_type="pitcher", category="xhr", min_hr=5)
@@ -78,33 +78,33 @@ class TestHomeRuns:
         with pytest.raises(ValueError):
             home_runs(2024, category="distance")
 
-    @patch("savant_extras.home_runs.requests.get")
+    @patch("requests.get")
     def test_empty_response(self, mock_get):
         mock_get.return_value = _mock_response("")
         assert home_runs(2024).empty
 
-    @patch("savant_extras.home_runs.requests.get")
+    @patch("requests.get")
     def test_html_response(self, mock_get):
         mock_get.return_value = _mock_response("<!DOCTYPE html>")
         assert home_runs(2024).empty
 
 
 class TestHomeRunsRange:
-    @patch("savant_extras.home_runs.requests.get")
+    @patch("requests.get")
     def test_year_column(self, mock_get):
         mock_get.side_effect = _per_year(SAMPLE_CSV)
         df = home_runs_range(2023, 2024)
         assert "year" in df.columns
         assert set(df["year"]) == {2023, 2024}
 
-    @patch("savant_extras.home_runs.requests.get")
+    @patch("requests.get")
     def test_api_calls(self, mock_get):
         mock_get.side_effect = _per_year(SAMPLE_CSV)
         home_runs_range(2022, 2024)
         assert mock_get.call_count == 3
 
-    @patch("savant_extras.home_runs.time.sleep")
-    @patch("savant_extras.home_runs.requests.get")
+    @patch("time.sleep")
+    @patch("requests.get")
     def test_sleep(self, mock_get, mock_sleep):
         mock_get.side_effect = _per_year(SAMPLE_CSV)
         home_runs_range(2022, 2024)

@@ -83,7 +83,7 @@ class TestFangraphsParkFactors:
                 park_factors_fangraphs(2024)
 
     def test_total_failure_warns_and_returns_empty(self):
-        with patch("savant_extras.park_factors_fangraphs.requests.get",
+        with patch("requests.get",
                    side_effect=RuntimeError("403")):
             with pytest.warns(UserWarning, match="no data fetched"):
                 df = park_factors_fangraphs_range(2023, 2024, sleep=0)

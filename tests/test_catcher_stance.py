@@ -40,14 +40,14 @@ def _per_year(csv_text):
 
 
 class TestCatcherStance:
-    @patch("savant_extras.catcher_stance.requests.get")
+    @patch("requests.get")
     def test_returns_dataframe(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         df = catcher_stance(2024)
         assert isinstance(df, pd.DataFrame)
         assert len(df) == 1
 
-    @patch("savant_extras.catcher_stance.requests.get")
+    @patch("requests.get")
     def test_url_contains_year(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         catcher_stance(2024)
@@ -56,28 +56,28 @@ class TestCatcherStance:
         assert "type=catcher" in url and "minPitches=" in url
         assert "year=" not in url and "min=" not in url
 
-    @patch("savant_extras.catcher_stance.requests.get")
+    @patch("requests.get")
     def test_empty_response(self, mock_get):
         mock_get.return_value = _mock_response("")
         assert catcher_stance(2024).empty
 
 
 class TestCatcherStanceRange:
-    @patch("savant_extras.catcher_stance.requests.get")
+    @patch("requests.get")
     def test_year_column(self, mock_get):
         mock_get.side_effect = _per_year(SAMPLE_CSV)
         df = catcher_stance_range(2023, 2024)
         assert "year" in df.columns
         assert set(df["year"]) == {2023, 2024}
 
-    @patch("savant_extras.catcher_stance.requests.get")
+    @patch("requests.get")
     def test_api_calls(self, mock_get):
         mock_get.side_effect = _per_year(SAMPLE_CSV)
         catcher_stance_range(2022, 2024)
         assert mock_get.call_count == 3
 
-    @patch("savant_extras.catcher_stance.time.sleep")
-    @patch("savant_extras.catcher_stance.requests.get")
+    @patch("time.sleep")
+    @patch("requests.get")
     def test_sleep(self, mock_get, mock_sleep):
         mock_get.side_effect = _per_year(SAMPLE_CSV)
         catcher_stance_range(2022, 2024)

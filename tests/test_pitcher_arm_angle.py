@@ -24,14 +24,14 @@ def _mock_response(csv_text):
 
 
 class TestPitcherArmAngle:
-    @patch("savant_extras.pitcher_arm_angle.requests.get")
+    @patch("requests.get")
     def test_returns_dataframe(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         df = pitcher_arm_angle(2024)
         assert isinstance(df, pd.DataFrame)
         assert len(df) == 1
 
-    @patch("savant_extras.pitcher_arm_angle.requests.get")
+    @patch("requests.get")
     def test_url_contains_year(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         pitcher_arm_angle(2024)
@@ -39,27 +39,27 @@ class TestPitcherArmAngle:
         assert "season=2024" in url
         assert "year=" not in url
 
-    @patch("savant_extras.pitcher_arm_angle.requests.get")
+    @patch("requests.get")
     def test_empty_response(self, mock_get):
         mock_get.return_value = _mock_response("")
         assert pitcher_arm_angle(2024).empty
 
 
 class TestPitcherArmAngleRange:
-    @patch("savant_extras.pitcher_arm_angle.requests.get")
+    @patch("requests.get")
     def test_year_column(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         df = pitcher_arm_angle_range(2023, 2024)
         assert "year" in df.columns
 
-    @patch("savant_extras.pitcher_arm_angle.requests.get")
+    @patch("requests.get")
     def test_api_calls(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         pitcher_arm_angle_range(2022, 2024)
         assert mock_get.call_count == 3
 
-    @patch("savant_extras.pitcher_arm_angle.time.sleep")
-    @patch("savant_extras.pitcher_arm_angle.requests.get")
+    @patch("time.sleep")
+    @patch("requests.get")
     def test_sleep(self, mock_get, mock_sleep):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         pitcher_arm_angle_range(2022, 2024)

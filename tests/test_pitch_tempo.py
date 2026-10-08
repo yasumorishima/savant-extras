@@ -27,21 +27,21 @@ def _mock_response(csv_text: str) -> MagicMock:
 
 
 class TestPitchTempo:
-    @patch("savant_extras.pitch_tempo.requests.get")
+    @patch("requests.get")
     def test_returns_dataframe(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         df = pitch_tempo(2024)
         assert isinstance(df, pd.DataFrame)
         assert len(df) == 2
 
-    @patch("savant_extras.pitch_tempo.requests.get")
+    @patch("requests.get")
     def test_columns_preserved(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         df = pitch_tempo(2024)
         assert "median_seconds_empty" in df.columns
         assert "freq_hot" in df.columns
 
-    @patch("savant_extras.pitch_tempo.requests.get")
+    @patch("requests.get")
     def test_url_contains_year(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         pitch_tempo(2024)
@@ -49,14 +49,14 @@ class TestPitchTempo:
         assert "season_start=2024" in url
         assert "season_end=2024" in url
 
-    @patch("savant_extras.pitch_tempo.requests.get")
+    @patch("requests.get")
     def test_pitcher_type_maps_to_pit(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         pitch_tempo(2024, player_type="pitcher")
         url = mock_get.call_args[0][0]
         assert "type=Pit" in url
 
-    @patch("savant_extras.pitch_tempo.requests.get")
+    @patch("requests.get")
     def test_batter_type_maps_to_bat(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         pitch_tempo(2024, player_type="batter")
@@ -67,14 +67,14 @@ class TestPitchTempo:
         with pytest.raises(ValueError, match="player_type must be"):
             pitch_tempo(2024, player_type="team")
 
-    @patch("savant_extras.pitch_tempo.requests.get")
+    @patch("requests.get")
     def test_empty_response_returns_empty(self, mock_get):
         mock_get.return_value = _mock_response("")
         df = pitch_tempo(2024)
         assert isinstance(df, pd.DataFrame)
         assert df.empty
 
-    @patch("savant_extras.pitch_tempo.requests.get")
+    @patch("requests.get")
     def test_html_response_returns_empty(self, mock_get):
         mock_get.return_value = _mock_response("<!DOCTYPE html><html></html>")
         df = pitch_tempo(2024)
@@ -83,33 +83,33 @@ class TestPitchTempo:
 
 
 class TestPitchTempoRange:
-    @patch("savant_extras.pitch_tempo.requests.get")
+    @patch("requests.get")
     def test_returns_dataframe_with_year_column(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         df = pitch_tempo_range(2023, 2024)
         assert isinstance(df, pd.DataFrame)
         assert "year" in df.columns
 
-    @patch("savant_extras.pitch_tempo.requests.get")
+    @patch("requests.get")
     def test_calls_api_per_year(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         pitch_tempo_range(2022, 2024)
         assert mock_get.call_count == 3
 
-    @patch("savant_extras.pitch_tempo.requests.get")
+    @patch("requests.get")
     def test_year_values(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         df = pitch_tempo_range(2023, 2024)
         assert set(df["year"].unique()) == {2023, 2024}
 
-    @patch("savant_extras.pitch_tempo.time.sleep")
-    @patch("savant_extras.pitch_tempo.requests.get")
+    @patch("time.sleep")
+    @patch("requests.get")
     def test_sleep_between_requests(self, mock_get, mock_sleep):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         pitch_tempo_range(2022, 2024)
         assert mock_sleep.call_count == 2
 
-    @patch("savant_extras.pitch_tempo.requests.get")
+    @patch("requests.get")
     def test_all_empty_returns_empty(self, mock_get):
         mock_get.return_value = _mock_response("")
         df = pitch_tempo_range(2022, 2024)

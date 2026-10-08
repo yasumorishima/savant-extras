@@ -40,14 +40,14 @@ def _per_year(csv_text):
 
 
 class TestTimerInfractions:
-    @patch("savant_extras.timer_infractions.requests.get")
+    @patch("requests.get")
     def test_returns_dataframe(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         df = timer_infractions(2024)
         assert isinstance(df, pd.DataFrame)
         assert len(df) == 1
 
-    @patch("savant_extras.timer_infractions.requests.get")
+    @patch("requests.get")
     def test_url_contains_year(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         timer_infractions(2024)
@@ -55,28 +55,28 @@ class TestTimerInfractions:
         assert "season=2024" in url
         assert "year=" not in url
 
-    @patch("savant_extras.timer_infractions.requests.get")
+    @patch("requests.get")
     def test_empty_response(self, mock_get):
         mock_get.return_value = _mock_response("")
         assert timer_infractions(2024).empty
 
 
 class TestTimerInfractionsRange:
-    @patch("savant_extras.timer_infractions.requests.get")
+    @patch("requests.get")
     def test_year_column(self, mock_get):
         mock_get.side_effect = _per_year(SAMPLE_CSV)
         df = timer_infractions_range(2023, 2024)
         assert "year" in df.columns
         assert set(df["year"]) == {2023, 2024}
 
-    @patch("savant_extras.timer_infractions.requests.get")
+    @patch("requests.get")
     def test_api_calls(self, mock_get):
         mock_get.side_effect = _per_year(SAMPLE_CSV)
         timer_infractions_range(2023, 2024)
         assert mock_get.call_count == 2
 
-    @patch("savant_extras.timer_infractions.time.sleep")
-    @patch("savant_extras.timer_infractions.requests.get")
+    @patch("time.sleep")
+    @patch("requests.get")
     def test_sleep(self, mock_get, mock_sleep):
         mock_get.side_effect = _per_year(SAMPLE_CSV)
         timer_infractions_range(2023, 2024)
