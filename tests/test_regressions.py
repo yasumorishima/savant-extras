@@ -61,7 +61,7 @@ SEASON_CHECKED = sorted(set(LEADERBOARDS) - {"bat_tracking", "year_to_year"})
 
 def _call(name, text, *args, **kwargs):
     fn = getattr(importlib.import_module(f"savant_extras.{name}"), name)
-    with patch(f"savant_extras.{name}.requests.get") as get:
+    with patch("requests.get") as get:
         get.return_value = _resp(text)
         out = fn(*(args or LEADERBOARDS[name]), **kwargs)
     return out, get.call_args[0][0]
