@@ -36,9 +36,8 @@ def _patch(tables=None):
 
     @contextlib.contextmanager
     def _ctx():
-        target = "savant_extras.park_factors_fangraphs"
-        with patch(f"{target}.requests.get", return_value=_response()) as mg:
-            with patch(f"{target}.pd.read_html",
+        with patch("requests.get", return_value=_response()) as mg:
+            with patch("pandas.read_html",
                        return_value=tables or [_SAMPLE_TABLE]) as mh:
                 yield mg, mh
 
@@ -83,7 +82,7 @@ class TestFangraphsParkFactors:
                 park_factors_fangraphs(2024)
 
     def test_total_failure_warns_and_returns_empty(self):
-        with patch("savant_extras.park_factors_fangraphs.requests.get",
+        with patch("requests.get",
                    side_effect=RuntimeError("403")):
             with pytest.warns(UserWarning, match="no data fetched"):
                 df = park_factors_fangraphs_range(2023, 2024, sleep=0)
@@ -97,9 +96,8 @@ class TestFangraphsParkFactors:
                 raise RuntimeError("403")
             return real
 
-        target = "savant_extras.park_factors_fangraphs"
-        with patch(f"{target}.requests.get", side_effect=_flaky):
-            with patch(f"{target}.pd.read_html", return_value=[_SAMPLE_TABLE]):
+        with patch("requests.get", side_effect=_flaky):
+            with patch("pandas.read_html", return_value=[_SAMPLE_TABLE]):
                 with pytest.warns(UserWarning, match="skipped 2024"):
                     df = park_factors_fangraphs_range(2023, 2024, sleep=0)
         assert sorted(df["season"].unique()) == [2023]

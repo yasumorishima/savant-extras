@@ -44,21 +44,21 @@ def _per_year(csv_text):
 
 
 class TestPitchMovement:
-    @patch("savant_extras.pitch_movement.requests.get")
+    @patch("requests.get")
     def test_returns_dataframe(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         df = pitch_movement(2024)
         assert isinstance(df, pd.DataFrame)
         assert len(df) == 1
 
-    @patch("savant_extras.pitch_movement.requests.get")
+    @patch("requests.get")
     def test_url_contains_year(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         pitch_movement(2024)
         url = mock_get.call_args[0][0]
         assert "year=2024" in url
 
-    @patch("savant_extras.pitch_movement.requests.get")
+    @patch("requests.get")
     def test_pitch_type_filter(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV.replace(",FF,", ",SL,"))
         df = pitch_movement(2024, pitch_type="SL")
@@ -67,39 +67,39 @@ class TestPitchMovement:
         assert "pitchType" not in url
         assert set(df["pitch_type"]) == {"SL"}
 
-    @patch("savant_extras.pitch_movement.requests.get")
+    @patch("requests.get")
     def test_default_pitch_type_is_ff(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         pitch_movement(2024)
         assert "pitch_type=FF" in mock_get.call_args[0][0]
 
-    @patch("savant_extras.pitch_movement.requests.get")
+    @patch("requests.get")
     def test_empty_response(self, mock_get):
         mock_get.return_value = _mock_response("")
         assert pitch_movement(2024).empty
 
-    @patch("savant_extras.pitch_movement.requests.get")
+    @patch("requests.get")
     def test_html_response(self, mock_get):
         mock_get.return_value = _mock_response("<!DOCTYPE html>")
         assert pitch_movement(2024).empty
 
 
 class TestPitchMovementRange:
-    @patch("savant_extras.pitch_movement.requests.get")
+    @patch("requests.get")
     def test_concatenates(self, mock_get):
         mock_get.side_effect = _per_year(SAMPLE_CSV)
         df = pitch_movement_range(2023, 2024)
         assert isinstance(df, pd.DataFrame)
         assert len(df) == 2
 
-    @patch("savant_extras.pitch_movement.requests.get")
+    @patch("requests.get")
     def test_api_calls(self, mock_get):
         mock_get.side_effect = _per_year(SAMPLE_CSV)
         pitch_movement_range(2022, 2024)
         assert mock_get.call_count == 3
 
-    @patch("savant_extras.pitch_movement.time.sleep")
-    @patch("savant_extras.pitch_movement.requests.get")
+    @patch("time.sleep")
+    @patch("requests.get")
     def test_sleep(self, mock_get, mock_sleep):
         mock_get.side_effect = _per_year(SAMPLE_CSV)
         pitch_movement_range(2022, 2024)

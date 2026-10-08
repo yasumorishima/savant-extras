@@ -25,21 +25,21 @@ def _mock_response(csv_text):
 
 
 class TestBattedBall:
-    @patch("savant_extras.batted_ball.requests.get")
+    @patch("requests.get")
     def test_returns_dataframe(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         df = batted_ball(2024)
         assert isinstance(df, pd.DataFrame)
         assert len(df) == 2
 
-    @patch("savant_extras.batted_ball.requests.get")
+    @patch("requests.get")
     def test_url_contains_year(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         batted_ball(2024)
         url = mock_get.call_args[0][0]
         assert "year=2024" in url
 
-    @patch("savant_extras.batted_ball.requests.get")
+    @patch("requests.get")
     def test_player_type_in_url(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         batted_ball(2024, player_type="pitcher")
@@ -50,33 +50,33 @@ class TestBattedBall:
         with pytest.raises(ValueError):
             batted_ball(2024, player_type="team")
 
-    @patch("savant_extras.batted_ball.requests.get")
+    @patch("requests.get")
     def test_empty_response(self, mock_get):
         mock_get.return_value = _mock_response("")
         assert batted_ball(2024).empty
 
-    @patch("savant_extras.batted_ball.requests.get")
+    @patch("requests.get")
     def test_html_response(self, mock_get):
         mock_get.return_value = _mock_response("<!DOCTYPE html>")
         assert batted_ball(2024).empty
 
 
 class TestBattedBallRange:
-    @patch("savant_extras.batted_ball.requests.get")
+    @patch("requests.get")
     def test_year_column(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         df = batted_ball_range(2023, 2024)
         assert "year" in df.columns
         assert set(df["year"].unique()) == {2023, 2024}
 
-    @patch("savant_extras.batted_ball.requests.get")
+    @patch("requests.get")
     def test_api_calls(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         batted_ball_range(2022, 2024)
         assert mock_get.call_count == 3
 
-    @patch("savant_extras.batted_ball.time.sleep")
-    @patch("savant_extras.batted_ball.requests.get")
+    @patch("time.sleep")
+    @patch("requests.get")
     def test_sleep(self, mock_get, mock_sleep):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         batted_ball_range(2022, 2024)

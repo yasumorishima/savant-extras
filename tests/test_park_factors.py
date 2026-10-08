@@ -116,7 +116,7 @@ def _fake_get(**overrides):
 
 
 def _patch(**overrides):
-    return patch("savant_extras.park_factors.requests.get",
+    return patch("requests.get",
                  side_effect=_fake_get(**overrides))
 
 
@@ -306,7 +306,7 @@ class TestParkFactors:
 
 class TestParkFactorsFailsLoudly:
     def test_missing_data_block_raises(self):
-        with patch("savant_extras.park_factors.requests.get",
+        with patch("requests.get",
                    return_value=_response("<html>no leaderboard here</html>")):
             with pytest.raises(ValueError, match="data block not found"):
                 park_factors(2026)
@@ -325,7 +325,7 @@ class TestParkFactorsFailsLoudly:
 
     def test_page_serving_another_season_raises(self):
         stale = [dict(row, key_year="2019") for row in _SINGLE]
-        with patch("savant_extras.park_factors.requests.get",
+        with patch("requests.get",
                    return_value=_response(_page(stale))):
             with pytest.raises(ValueError, match="key_year"):
                 park_factors(2026)
@@ -366,13 +366,13 @@ class TestParkFactorsRange:
                 raise RuntimeError("boom")
             return good(url, **kwargs)
 
-        with patch("savant_extras.park_factors.requests.get", side_effect=_flaky):
+        with patch("requests.get", side_effect=_flaky):
             with pytest.warns(UserWarning, match="skipped 2025"):
                 df = park_factors_range(2024, 2026, sleep=0)
         assert sorted(df["season"].unique()) == [2024, 2026]
 
     def test_total_failure_warns_and_returns_empty(self):
-        with patch("savant_extras.park_factors.requests.get",
+        with patch("requests.get",
                    side_effect=RuntimeError("network down")):
             with pytest.warns(UserWarning, match="no data fetched"):
                 df = park_factors_range(2024, 2026, sleep=0)

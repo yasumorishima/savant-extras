@@ -23,21 +23,21 @@ def _mock_response(csv_text):
 
 
 class TestYearToYear:
-    @patch("savant_extras.year_to_year.requests.get")
+    @patch("requests.get")
     def test_returns_dataframe(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         df = year_to_year(2024)
         assert isinstance(df, pd.DataFrame)
         assert len(df) == 1
 
-    @patch("savant_extras.year_to_year.requests.get")
+    @patch("requests.get")
     def test_url_contains_year(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         year_to_year(2024)
         url = mock_get.call_args[0][0]
         assert "year=2024" in url
 
-    @patch("savant_extras.year_to_year.requests.get")
+    @patch("requests.get")
     def test_player_type_in_url(self, mock_get):
         mock_get.return_value = _mock_response(SAMPLE_CSV)
         year_to_year(2024, player_type="pitcher")
@@ -50,7 +50,7 @@ class TestYearToYear:
         with pytest.raises(ValueError):
             year_to_year(2024, player_type="team")
 
-    @patch("savant_extras.year_to_year.requests.get")
+    @patch("requests.get")
     def test_empty_response(self, mock_get):
         mock_get.return_value = _mock_response("")
         assert year_to_year(2024).empty

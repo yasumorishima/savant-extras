@@ -65,7 +65,7 @@ def _abs(year=2026, level="MLB", n=2):
 
 
 class TestAbsChallenges:
-    @patch("savant_extras.abs_challenges.requests.get")
+    @patch("requests.get")
     def test_url_carries_every_parameter(self, get):
         get.return_value = _resp(_abs(2025, "AAA"))
         abs_challenges(2025, level="aaa", challenge_type="catcher", game_type="S", min_challenges=0)
@@ -74,47 +74,47 @@ class TestAbsChallenges:
                      "gameType%5B%5D=S", "minChal=0"):
             assert part in url, part
 
-    @patch("savant_extras.abs_challenges.requests.get")
+    @patch("requests.get")
     def test_adds_challenge_type_column(self, get):
         get.return_value = _resp(_abs())
         df = abs_challenges(2026, challenge_type="batter")
         assert (df["challenge_type"] == "batter").all()
         assert len(df) == 2
 
-    @patch("savant_extras.abs_challenges.requests.get")
+    @patch("requests.get")
     def test_level_mismatch_raises(self, get):
         # Savant ignoring level=aaa would hand back the MLB table
         get.return_value = _resp(_abs(2025, "MLB"))
         with pytest.raises(ValueError, match="level"):
             abs_challenges(2025, level="aaa")
 
-    @patch("savant_extras.abs_challenges.requests.get")
+    @patch("requests.get")
     def test_year_mismatch_raises(self, get):
         get.return_value = _resp(_abs(2026, "MLB"))
         with pytest.raises(ValueError, match="year"):
             abs_challenges(2025)
 
-    @patch("savant_extras.abs_challenges.requests.get")
+    @patch("requests.get")
     def test_empty_season_warns_and_returns_empty(self, get):
         get.return_value = _resp(_page([]))
         with pytest.warns(EmptySavantResponse):
             df = abs_challenges(2025)
         assert df.empty
 
-    @patch("savant_extras.abs_challenges.requests.get")
+    @patch("requests.get")
     def test_page_without_data_raises(self, get):
         get.return_value = _resp("<html>maintenance</html>")
         with pytest.raises(ValueError, match="layout"):
             abs_challenges(2026)
 
-    @patch("savant_extras.abs_challenges.requests.get")
+    @patch("requests.get")
     def test_player_id_column_leads(self, get):
         get.return_value = _resp(_abs())
         df = abs_challenges(2026)
         assert list(df.columns[:3]) == ["challenge_type", "player_id", "player_name"]
         assert df["player_id"].tolist() == [600000, 600001]
 
-    @patch("savant_extras.abs_challenges.requests.get")
+    @patch("requests.get")
     def test_missing_player_id_raises(self, get):
         get.return_value = _resp(_page([{"id": None, "year": 2026, "level": "MLB"}]))
         with pytest.raises(ValueError, match="player id"):
@@ -125,8 +125,8 @@ class TestAbsChallenges:
         with pytest.raises(ValueError):
             abs_challenges(2026, **kw)
 
-    @patch("savant_extras.abs_challenges.time.sleep")
-    @patch("savant_extras.abs_challenges.requests.get")
+    @patch("time.sleep")
+    @patch("requests.get")
     def test_range_one_request_per_season_skips_empty(self, get, _sleep):
         get.side_effect = [_resp(_page([])), _resp(_abs(2025, "AAA")), _resp(_abs(2026, "AAA", 3))]
         with pytest.warns(EmptySavantResponse):
@@ -146,8 +146,8 @@ def _sc(day="2025-06-10", home="TOL", away="COL", n=3, pk=780001):
 
 
 class TestStatcastMinors:
-    @patch("savant_extras.statcast_minors.time.sleep")
-    @patch("savant_extras.statcast_minors.requests.get")
+    @patch("time.sleep")
+    @patch("requests.get")
     def test_one_request_per_day_with_minors_flag(self, get, _sleep):
         get.side_effect = [_resp(_sc(n=2)), _resp(SC_HEAD), _resp(_sc(n=4))]
         with warnings.catch_warnings():
@@ -160,20 +160,20 @@ class TestStatcastMinors:
             assert "minors=true" in u and "hfLevel=AAA%7C" in u and "hfSea=2025%7C" in u
         assert "game_date_gt=2025-06-11&game_date_lt=2025-06-11" in urls[1]
 
-    @patch("savant_extras.statcast_minors.requests.get")
+    @patch("requests.get")
     def test_columbus_is_not_a_major_league_game(self, get):
         # COL is Colorado in MLB and Columbus in Triple-A
         get.return_value = _resp(_sc(home="COL", away="TOL"))
         assert len(statcast_minors("2025-06-10", "2025-06-10")) == 3
 
-    @patch("savant_extras.statcast_minors.requests.get")
+    @patch("requests.get")
     def test_major_league_game_raises(self, get):
         get.return_value = _resp(_sc(home="COL", away="AZ", pk=777001))
         with pytest.raises(ValueError, match="major-league"):
             statcast_minors("2025-06-10", "2025-06-10")
 
-    @patch("savant_extras.statcast_minors.time.sleep")
-    @patch("savant_extras.statcast_minors.requests.get")
+    @patch("time.sleep")
+    @patch("requests.get")
     def test_all_empty_warns_once(self, get, _sleep):
         get.return_value = _resp(SC_HEAD)
         with pytest.warns(EmptySavantResponse, match="no AAA pitches") as rec:
@@ -181,7 +181,7 @@ class TestStatcastMinors:
         assert df.empty
         assert len(rec) == 1
 
-    @patch("savant_extras.statcast_minors.requests.get")
+    @patch("requests.get")
     def test_row_cap_warns(self, get):
         get.return_value = _resp(_sc(n=25000))
         with pytest.warns(UserWarning, match="cap"):

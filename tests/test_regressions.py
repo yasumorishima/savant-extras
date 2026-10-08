@@ -61,7 +61,7 @@ SEASON_CHECKED = sorted(set(LEADERBOARDS) - {"bat_tracking", "year_to_year"})
 
 def _call(name, text, *args, **kwargs):
     fn = getattr(importlib.import_module(f"savant_extras.{name}"), name)
-    with patch(f"savant_extras.{name}.requests.get") as get:
+    with patch("requests.get") as get:
         get.return_value = _resp(text)
         out = fn(*(args or LEADERBOARDS[name]), **kwargs)
     return out, get.call_args[0][0]
@@ -157,7 +157,7 @@ ARM_CSV = (
 
 
 def test_arm_strength_keeps_only_shortstops():
-    with patch("savant_extras.arm_strength.requests.get") as get:
+    with patch("requests.get") as get:
         get.return_value = _resp(ARM_CSV)
         df = arm_strength(2024, position="SS")
     assert list(df["player_id"]) == [1, 3]
@@ -166,27 +166,27 @@ def test_arm_strength_keeps_only_shortstops():
 
 
 def test_arm_strength_outfielder_maps_to_arm_of():
-    with patch("savant_extras.arm_strength.requests.get") as get:
+    with patch("requests.get") as get:
         get.return_value = _resp(ARM_CSV)
         df = arm_strength(2024, position="Outfielder")
     assert list(df["player_id"]) == [2]
 
 
 def test_arm_strength_no_position_keeps_all():
-    with patch("savant_extras.arm_strength.requests.get") as get:
+    with patch("requests.get") as get:
         get.return_value = _resp(ARM_CSV)
         assert len(arm_strength(2024)) == 4
 
 
 def test_arm_strength_unknown_position_raises_before_request():
-    with patch("savant_extras.arm_strength.requests.get") as get:
+    with patch("requests.get") as get:
         with pytest.raises(ValueError, match="position"):
             arm_strength(2024, position="P")
     get.assert_not_called()
 
 
 def test_arm_strength_missing_column_raises():
-    with patch("savant_extras.arm_strength.requests.get") as get:
+    with patch("requests.get") as get:
         get.return_value = _resp(ARM_CSV)
         with pytest.raises(ValueError, match="arm_cf"):
             arm_strength(2024, position="CF")
@@ -198,14 +198,14 @@ PM_CSV = "year,pitcher_id,pitch_type,pitcher_break_z\n2024,1,FF,14.2\n2024,2,FF,
 
 
 def test_pitch_movement_mismatched_type_raises():
-    with patch("savant_extras.pitch_movement.requests.get") as get:
+    with patch("requests.get") as get:
         get.return_value = _resp(PM_CSV)
         with pytest.raises(ValueError, match="pitch_type=CU"):
             pitch_movement(2024, pitch_type="CU")
 
 
 def test_pitch_movement_matching_type_passes():
-    with patch("savant_extras.pitch_movement.requests.get") as get:
+    with patch("requests.get") as get:
         get.return_value = _resp(PM_CSV.replace(",FF,", ",CU,"))
         assert len(pitch_movement(2024, pitch_type="CU")) == 2
 
@@ -213,14 +213,14 @@ def test_pitch_movement_matching_type_passes():
 # (f) home_runs(hr_type=...) is deprecated --------------------------------
 
 def test_home_runs_hr_type_deprecated():
-    with patch("savant_extras.home_runs.requests.get") as get:
+    with patch("requests.get") as get:
         get.return_value = _resp("year,player_id\n2024,1\n")
         with pytest.warns(DeprecationWarning, match="hr_type"):
             home_runs(2024, hr_type="exit_velocity")
 
 
 def test_home_runs_without_hr_type_does_not_warn():
-    with patch("savant_extras.home_runs.requests.get") as get:
+    with patch("requests.get") as get:
         get.return_value = _resp("year,player_id\n2024,1\n")
         with warnings.catch_warnings():
             warnings.simplefilter("error")
@@ -236,8 +236,8 @@ def _sc(day, n):
     return SC_HEAD + "".join(f"FF,{day},780001,TOL,COL\n" for _ in range(n))
 
 
-@patch("savant_extras.statcast_minors.time.sleep")
-@patch("savant_extras.statcast_minors.requests.get")
+@patch("time.sleep")
+@patch("requests.get")
 def test_minors_html_day_warns_once_and_keeps_other_days(get, _sleep):
     get.side_effect = [
         _resp(_sc("2025-06-10", 2)),
@@ -252,8 +252,8 @@ def test_minors_html_day_warns_once_and_keeps_other_days(get, _sleep):
     assert sorted(df["game_date"].unique()) == ["2025-06-10", "2025-06-12"]
 
 
-@patch("savant_extras.statcast_minors.time.sleep")
-@patch("savant_extras.statcast_minors.requests.get")
+@patch("time.sleep")
+@patch("requests.get")
 def test_minors_retries_503_then_succeeds(get, sleep):
     get.side_effect = [_resp("", status=503), _resp(_sc("2025-06-10", 4))]
     df = statcast_minors("2025-06-10", "2025-06-10")
@@ -262,15 +262,15 @@ def test_minors_retries_503_then_succeeds(get, sleep):
     assert sleep.call_count == 1
 
 
-@patch("savant_extras.statcast_minors.time.sleep")
-@patch("savant_extras.statcast_minors.requests.get")
+@patch("time.sleep")
+@patch("requests.get")
 def test_minors_retries_connection_error(get, _sleep):
     get.side_effect = [requests.ConnectionError("reset"), _resp(_sc("2025-06-10", 1))]
     assert len(statcast_minors("2025-06-10", "2025-06-10")) == 1
 
 
-@patch("savant_extras.statcast_minors.time.sleep")
-@patch("savant_extras.statcast_minors.requests.get")
+@patch("time.sleep")
+@patch("requests.get")
 def test_minors_persistent_503_raises(get, _sleep):
     get.return_value = _resp("", status=503)
     with pytest.raises(requests.HTTPError):
@@ -278,8 +278,8 @@ def test_minors_persistent_503_raises(get, _sleep):
     assert get.call_count == 3
 
 
-@patch("savant_extras.statcast_minors.time.sleep")
-@patch("savant_extras.statcast_minors.requests.get")
+@patch("time.sleep")
+@patch("requests.get")
 def test_minors_4xx_is_not_retried(get, _sleep):
     get.return_value = _resp("", status=404)
     with pytest.raises(requests.HTTPError):
