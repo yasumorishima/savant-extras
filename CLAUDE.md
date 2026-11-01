@@ -18,6 +18,15 @@ This project is worked on in Claude Code cloud. The owner starts a session with 
 - 2026-10-08: 0.6.1 — CI matrix 3.9–3.14 (tests had failed on 3.9/3.10 because of patch targets), weekly live run, PyPI summary/classifiers (PR #5, #6). Publish run `37796771467` success; PyPI shows 0.6.1.
 - 2026-10-12 / 10-19 / 10-26: scheduled `Live Savant` runs on `master` all success.
 - 2026-11-01: this file written for cloud work (no code change).
+- 2026-11-01 (cloud): `SAVANT_LIVE=1 python -m pytest tests/live -q` 26 passed, 0 failed (113 s); unit tests 296 passed, 26 skipped. Savant / Stats API reachable (section below).
+
+## Cloud reachability (measured 2026-11-01, cloud session)
+| Check | Result | Proof |
+|---|---|---|
+| `curl --max-time 60 "https://baseballsavant.mlb.com/leaderboard/sprint_speed?year=2025&position=&team=&min=10&csv=true"` | 200, 0.18 s, 36,204 B | 579 CSV lines |
+| `curl --max-time 60 "https://statsapi.mlb.com/api/v1/teams?sportId=1"` | 200, 0.20 s | 30 teams |
+| `pip install -e ".[dev]"`; `SAVANT_LIVE=1 python -m pytest tests/live -q` (Python 3.13) | **26 passed, 0 failed** in 112.6 s | no FanGraphs test exists in `tests/live`, so the expected FanGraphs 403 was not exercised |
+| `python -m pytest tests -q` | 296 passed, 26 skipped | live tests skipped without `SAVANT_LIVE` |
 
 ## What this is
 Public PyPI library (`pip install savant-extras`, MIT) that wraps Baseball Savant leaderboards pybaseball lacks or gets wrong, each as one function returning a `pandas.DataFrame`, most with a `*_range()` multi-season variant. Package code in `savant_extras/` (one module per leaderboard, shared parsing/season check in `savant_extras/_http.py`), unit tests in `tests/` (every request mocked), live tests in `tests/live/`. User-facing docs: `README.md`; every release is described in `CHANGELOG.md`. Downstream users include the owner's `mlb-data-pipeline` (weekly HF refresh) and Kaggle datasets built from it, so a silent wrong answer here propagates.
@@ -42,14 +51,14 @@ Public PyPI library (`pip install savant-extras`, MIT) that wraps Baseball Savan
 ```bash
 pip install -e ".[dev]"
 pytest tests/ -q                      # unit tests; tests/live is collected but skipped
-SAVANT_LIVE=1 pytest tests/live -v    # real requests to baseballsavant.mlb.com (unverified from cloud so far)
+SAVANT_LIVE=1 pytest tests/live -v    # real requests to baseballsavant.mlb.com (works from cloud: 26 passed, 2026-11-01)
 ```
 CI: `.github/workflows/test.yml` (push/PR to `master`, Python 3.9–3.14), `.github/workflows/live.yml` (PR to `master` + Mondays 03:17 UTC, Python 3.12, `SAVANT_LIVE=1`).
 
 ## Release
 - Bump version in both files + CHANGELOG via PR (precedent: PR #6 "chore: release 0.6.1"), merge.
 - Publishing: `.github/workflows/publish.yml` runs on **`release: published`** (not on tag push) and uploads to PyPI by OIDC trusted publishing — no token. From the owner's machine: `gh release create vX.Y.Z --title "vX.Y.Z" --notes "..."`.
-- **From cloud (unverified):** publish a GitHub release for tag `vX.Y.Z` on `master` with a GitHub MCP tool if one exists for creating releases. Pushing a tag alone does nothing. If no MCP tool can create a release, stop after the merge and ask the owner to run the `gh release create` line above.
+- **From cloud (unverified; the GitHub MCP tools of the 2026-11-01 session had no create-release tool, only list/get):** publish a GitHub release for tag `vX.Y.Z` on `master` with a GitHub MCP tool if one exists for creating releases. Pushing a tag alone does nothing. If no MCP tool can create a release, stop after the merge and ask the owner to run the `gh release create` line above.
 - Verify: the `Publish to PyPI` run is success and `https://pypi.org/pypi/savant-extras/json` reports the new `info.version`; then `pip install -U savant-extras` in a fresh venv and import it.
 
 ## Data access
