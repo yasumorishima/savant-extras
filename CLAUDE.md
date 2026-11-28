@@ -19,6 +19,42 @@ This project is worked on in Claude Code cloud. The owner starts a session with 
 - 2026-10-12 / 10-19 / 10-26: scheduled `Live Savant` runs on `master` all success.
 - 2026-11-01: this file written for cloud work (no code change).
 - 2026-11-01 (cloud): `SAVANT_LIVE=1 python -m pytest tests/live -q` 26 passed, 0 failed (113 s); unit tests 296 passed, 26 skipped. Savant / Stats API reachable (section below).
+- 2026-11-28 (cloud): measured network vs parse for every public function before deciding on Rust (owner asked, reference: anthropic.com/research/migrating-api-to-rust). **Decision: no Rust.** Parse is ≤0.5% of a call on a cold Savant cache and ≤12% of network on a warm one; even `statcast_minors` 7 days parses in 0.27–0.29 s against 2.2–57 s network + 6 s polite sleep. Table and method in "Rust decision" below; script `benchmarks/measure_split.py` (not run in CI). No library code changed.
+
+## Rust decision (measured 2026-11-28, cloud, Python 3.13, `python benchmarks/measure_split.py --minors-days 7`)
+Network = wall time inside `requests.get` (connect + whole body). Sleep = the library's own `time.sleep` between requests. Parse = total − network − sleep (decode, CSV/JSON → DataFrame, `check_season`, rename, concat, MLB-game check). Two runs back to back: run 1 hit a cold Savant cache, run 2 a warm one (same URLs).
+
+| Function (2025 unless noted) | req | network s run1 / run2 | parse s run1 / run2 | rows |
+|---|---|---|---|---|
+| abs_challenges(2026) | 1 | 0.73 / 0.51 | 0.030 / 0.049 | 526 |
+| arm_strength | 1 | 0.52 / 0.36 | 0.004 / 0.003 | 351 |
+| baserunning | 1 | 0.96 / 0.35 | 0.005 / 0.004 | 253 |
+| basestealing | 1 | 1.07 / 0.38 | 0.005 / 0.004 | 423 |
+| bat_tracking (03-27..09-28) | 1 | 1.66 / 0.29 | 0.002 / 0.004 | 226 |
+| bat_tracking_monthly | 7 | 10.53 / 2.57 (+6.0 sleep) | 0.026 / 0.033 | 2850 |
+| bat_tracking_splits | 2 | 2.52 / 0.63 (+1.0 sleep) | 0.005 / 0.007 | 452 |
+| batted_ball | 1 | 1.13 / 0.39 | 0.003 / 0.003 | 316 |
+| catcher_blocking | 1 | 1.31 / 0.35 | 0.002 / 0.002 | 65 |
+| catcher_stance | 1 | 2.57 / 0.36 | 0.005 / 0.005 | 57 |
+| catcher_throwing | 1 | 1.18 / 0.36 | 0.002 / 0.002 | 63 |
+| home_runs | 1 | 1.41 / 0.38 | 0.003 / 0.003 | 579 |
+| pitch_movement | 1 | 0.63 / 0.37 | 0.004 / 0.004 | 438 |
+| pitch_tempo | 1 | 1.60 / 0.38 | 0.004 / 0.003 | 361 |
+| pitcher_arm_angle | 1 | 13.81 / 0.35 | 0.002 / 0.002 | 287 |
+| running_game | 1 | 2.36 / 0.37 | 0.004 / 0.006 | 504 |
+| swing_take | 1 | 0.72 / 0.37 | 0.003 / 0.003 | 300 |
+| timer_infractions | 1 | 1.06 / 0.37 | 0.002 / 0.003 | 30 |
+| park_factors | 2 | 1.02 / 0.74 | 0.008 / 0.010 | 30 |
+| park_factors_fangraphs | 1 | 0.42 / 0.38 | — | 403 (expected, datacenter IP) |
+| year_to_year | 1 | 0.45 / 0.12 | 0.003 / 0.002 | 177 |
+| statcast_minors (2025-06-10) | 1 | 11.08 / 0.42 | 0.065 / 0.073 | 4,629 (2.9 MB) |
+| statcast_minors (06-10..06-16) | 7 | 56.79 / 2.24 (+6.0 sleep) | 0.274 / 0.285 | 27,305 (17.5 MB) |
+
+Inside statcast_minors' parse (one day, 2.9 MB, 119 cols, median of 10, offline): decode 2 ms, `pd.read_csv` (C engine) 33–40 ms, concat of 7 days 4 ms, MLB-game check 1.5 ms. Extrapolated full season (180 copies of one day, 824k rows): concat 0.27 s, MLB check 0.03 s, read_csv ≈ 6–7 s total — against ≈180 s of polite sleep alone plus network.
+- **Why no Rust:** the CPU part is already pandas' C CSV parser; the Python-level code around it is milliseconds. Removing parse entirely (Rust's upper bound) saves ≤0.29 s of an 8.5–63 s `statcast_minors` week. Not worth a native build matrix (manylinux/macOS/Windows × 3.9–3.14) for a library whose users install a pure wheel.
+- **"Python のまま縮める" check:** `engine="pyarrow"` reads the same day in 14 ms vs 40 ms, but the DataFrame is **not identical** (first difference: column `game_date` dtype — pyarrow parses it as a date, the C engine leaves a string). Would change output; not adopted.
+- **If speed matters later, the levers are network-side:** (a) an opt-in on-disk cache of past-season `statcast_minors` days (a finished day never changes; repeat runs went 57 s → 2 s even from Savant's own cache), (b) `*_range`/monthly sleep tuning only with care — the sleeps are there to be polite to Savant; parallel fetching is not recommended for the same reason.
+- GHA reference given by owner (not re-measured this session): Tests ≤2 min, Live Savant ≤2 min over the last 30 successful runs.
 
 ## Cloud reachability (measured 2026-11-01, cloud session)
 | Check | Result | Proof |
